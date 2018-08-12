@@ -1,5 +1,7 @@
 #include "WebRTCPeer.hpp"
 
+using namespace godot_webrtc;
+
 void WebRTCPeer::set_write_mode(godot_int mode) {
 
 }
@@ -62,6 +64,9 @@ void WebRTCPeer::_register_methods() { }
 void WebRTCPeer::_init() {
 	printf("Binding PacketPeer interface");
 	register_interface(&interface);
+}
+
+WebRTCPeer::WebRTCPeer() {
 }
 
 WebRTCPeer::~WebRTCPeer() {

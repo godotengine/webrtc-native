@@ -5,6 +5,8 @@
 
 #include "net/WebRTCPeerNative.hpp"
 
+namespace godot_webrtc {
+
 class WebRTCPeer : public WebRTCPeerNative {
 	GODOT_CLASS(WebRTCPeer, WebRTCPeerNative);
 
@@ -30,7 +32,10 @@ public:
 	virtual godot_int get_available_packet_count() const;
 	virtual godot_int get_max_packet_size() const;
 
+	WebRTCPeer();
 	~WebRTCPeer();
 };
+
+}
 
 #endif // WEBRTC_PEER_H
