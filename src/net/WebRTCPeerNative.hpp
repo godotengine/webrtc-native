@@ -3,7 +3,7 @@
 
 #include <Godot.hpp>
 #include <Reference.hpp>
-#include <WebRTCPeer.hpp>
+#include <WebRTCPeerGDNative.hpp>
 
 #include <net/godot_net.h>
 
@@ -24,8 +24,8 @@ godot_error set_local_description_wp(void *, const char *, const char *);
 godot_error add_ice_candidate_wp(void *, const char *, int, const char *);
 godot_error poll_wp(void *);
 
-class WebRTCPeerNative : public godot::WebRTCPeer {
-	GODOT_CLASS(WebRTCPeerNative, godot::WebRTCPeer);
+class WebRTCPeerNative : public godot::WebRTCPeerGDNative {
+	GODOT_CLASS(WebRTCPeerNative, godot::WebRTCPeerGDNative);
 
 protected:
 	godot_net_webrtc_peer interface = {
