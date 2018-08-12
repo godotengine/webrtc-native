@@ -52,8 +52,10 @@ protected:
 
 public:
 	static void _register_methods();
+	static const godot_gdnative_ext_net_api_struct *_net_api;
 
 	void _init();
+	void register_interface(const godot_net_webrtc_peer *interface);
 
 	virtual void set_write_mode(godot_int mode) = 0;
 	virtual godot_int get_write_mode() const = 0;

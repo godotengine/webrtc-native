@@ -1,7 +1,16 @@
+#include <gdnative_api_struct.gen.h>
+#include "net/WebRTCPeerNative.hpp"
 #include "WebRTCPeer.hpp"
 
 /* Godot export stuff */
 extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
+	const godot_gdnative_core_api_struct *api = o->api_struct;
+	for (int i = 0; i < api->num_extensions; i++) {
+		if (api->extensions[i]->type == GDNATIVE_EXT_NET) {
+			WebRTCPeerNative::_net_api = (godot_gdnative_ext_net_api_struct *)api->extensions[i];
+		}
+	}
+
 	godot::Godot::gdnative_init(o);
 }
 

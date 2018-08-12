@@ -1,16 +1,23 @@
 #include "WebRTCPeerNative.hpp"
 
+const godot_gdnative_ext_net_api_struct *WebRTCPeerNative::_net_api = NULL;
+
+void WebRTCPeerNative::register_interface(const godot_net_webrtc_peer *p_interface) {
+	ERR_FAIL_COND(!_net_api);
+	_net_api->godot_net_bind_webrtc_peer(_owner, p_interface);
+}
+
 void WebRTCPeerNative::_register_methods() { }
 
 void WebRTCPeerNative::_init() {
 	printf("Binding PacketPeer interface");
-	godot_net_bind_webrtc_peer(_owner, &interface);
+	register_interface(&interface);
 }
 
 WebRTCPeerNative::~WebRTCPeerNative() {
 	if (_owner) {
 		printf("Unbinding PacketPeer interface");
-		godot_net_bind_webrtc_peer(_owner, NULL);
+		register_interface(NULL);
 	}
 }
 

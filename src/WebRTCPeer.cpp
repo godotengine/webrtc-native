@@ -61,12 +61,12 @@ void WebRTCPeer::_register_methods() { }
 
 void WebRTCPeer::_init() {
 	printf("Binding PacketPeer interface");
-	godot_net_bind_webrtc_peer(_owner, &interface);
+	register_interface(&interface);
 }
 
 WebRTCPeer::~WebRTCPeer() {
 	if (_owner) {
 		printf("Unbinding PacketPeer interface");
-		godot_net_bind_webrtc_peer(_owner, NULL);
+		register_interface(NULL);
 	}
 }
