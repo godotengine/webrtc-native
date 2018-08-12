@@ -1,5 +1,5 @@
-#ifndef MY_PACKET_PEER
-#define MY_PACKET_PEER
+#ifndef WEBRTC_PEER_H
+#define WEBRTC_PEER_H
 
 #include <Godot.hpp>
 
@@ -33,4 +33,4 @@ public:
 	~WebRTCPeer();
 };
 
-#endif // MY_PACKET_PEER
+#endif // WEBRTC_PEER_H
