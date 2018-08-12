@@ -31,11 +31,23 @@ protected:
 	godot_net_webrtc_peer interface = {
 		{3, 1},
 		this,
+
 		&get_packet_wp,
 		&put_packet_wp,
 		&get_available_packet_count_wp,
 		&get_max_packet_size_wp,
-		NULL
+
+		&set_write_mode_wp,
+		&get_write_mode_wp,
+		&was_string_packet_wp,
+		&get_connection_state_wp,
+
+		&create_offer_wp,
+		&set_remote_description_wp,
+		&set_local_description_wp,
+		&add_ice_candidate_wp,
+		&poll_wp,
+		NULL,
 	};
 
 public:
