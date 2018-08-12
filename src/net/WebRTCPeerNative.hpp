@@ -43,10 +43,10 @@ public:
 
 	void _init();
 
-	virtual void set_write_mode(godot_int mode);
-	virtual godot_int get_write_mode() const;
-	virtual bool was_string_packet() const;
-	virtual godot_int get_connection_state() const;
+	virtual void set_write_mode(godot_int mode) = 0;
+	virtual godot_int get_write_mode() const = 0;
+	virtual bool was_string_packet() const = 0;
+	virtual godot_int get_connection_state() const = 0;
 
 	virtual godot_error create_offer() = 0;
 	virtual godot_error set_remote_description(const char * type, const char * sdp) = 0;
