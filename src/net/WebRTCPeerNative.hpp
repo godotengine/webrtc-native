@@ -19,9 +19,9 @@ bool was_string_packet_wp(const void *);
 godot_int get_connection_state_wp(const void *);
 
 godot_error create_offer_wp(void *);
-godot_error set_remote_description_wp(void *, godot_string, godot_string);
-godot_error set_local_description_wp(void *, godot_string, godot_string);
-godot_error add_ice_candidate_wp(void *, godot_string, int, godot_string);
+godot_error set_remote_description_wp(void *, const char *, const char *);
+godot_error set_local_description_wp(void *, const char *, const char *);
+godot_error add_ice_candidate_wp(void *, const char *, int, const char *);
 godot_error poll_wp(void *);
 
 class WebRTCPeerNative : public godot::WebRTCPeer {
@@ -49,9 +49,9 @@ public:
 	virtual godot_int get_connection_state() const;
 
 	virtual godot_error create_offer() = 0;
-	virtual godot_error set_remote_description(godot_string type, godot_string sdp) = 0;
-	virtual godot_error set_local_description(godot_string type, godot_string sdp) = 0;
-	virtual godot_error add_ice_candidate(godot_string sdpMidName, int sdpMlineIndexName, godot_string sdpName) = 0;
+	virtual godot_error set_remote_description(const char * type, const char * sdp) = 0;
+	virtual godot_error set_local_description(const char * type, const char * sdp) = 0;
+	virtual godot_error add_ice_candidate(const char *sdpMidName, int sdpMlineIndexName, const char *sdpName) = 0;
 	virtual godot_error poll() = 0;
 
 	/* PacketPeer */

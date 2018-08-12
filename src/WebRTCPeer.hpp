@@ -19,9 +19,9 @@ public:
 	godot_int get_connection_state() const;
 
 	godot_error create_offer();
-	godot_error set_remote_description(godot_string type, godot_string sdp);
-	godot_error set_local_description(godot_string type, godot_string sdp);
-	godot_error add_ice_candidate(godot_string sdpMidName, int sdpMlineIndexName, godot_string sdpName);
+	godot_error set_remote_description(const char *type, const char *sdp);
+	godot_error set_local_description(const char *type, const char *sdp);
+	godot_error add_ice_candidate(const char *sdpMidName, int sdpMlineIndexName, const char *sdpName);
 	godot_error poll();
 
 	/* WebRTCPeer */
