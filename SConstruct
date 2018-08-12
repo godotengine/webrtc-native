@@ -108,14 +108,14 @@ if target_platform == "linux":
     env.Append(CCFLAGS=["-DRTC_UNUSED=''", "-DNO_RETURN=''"])
 
 elif target_platform == "windows":
-    env.Append(CCFLAGS=["-DWEBRTC_WIN", "-D_WINSOCKAPI_", "-DNOMINMAX"])
-    env.Append(CCFLAGS=["/DRTC_UNUSED=", "/DNO_RETURN="])
     # Mostly VisualStudio
     if env["CC"] == "cl":
+        env.Append(CCFLAGS=["/DWEBRTC_WIN", "/D_WINSOCKAPI_", "/DNOMINMAX", "/DRTC_UNUSED=", "/DNO_RETURN="])
         env.Append(LINKFLAGS=[p + env["LIBSUFFIX"] for p in ["secur32", lib_name]])
         env.Append(LIBPATH=[lib_path])
     # Mostly "gcc"
     else:
+        env.Append(CCFLAGS=["-DWEBRTC_WIN", "-D_WINSOCKAPI_", "-DNOMINMAX", "-DRTC_UNUSED=", "-DNO_RETURN="])
         env.Append(LIBS=["secur32", lib_name])
         env.Append(LIBPATH=[lib_path])
 
