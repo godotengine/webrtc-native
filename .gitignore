@@ -3,3 +3,4 @@ bin/*
 *.a
 *.lib
 .sconsign.dblite
+*.obj

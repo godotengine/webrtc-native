@@ -29,7 +29,7 @@ class WebRTCPeerNative : public godot::WebRTCPeerGDNative {
 
 protected:
 	godot_net_webrtc_peer interface = {
-		{3, 1},
+		{ 3, 1 },
 		this,
 
 		&get_packet_wp,
@@ -63,8 +63,8 @@ public:
 	virtual godot_int get_connection_state() const = 0;
 
 	virtual godot_error create_offer() = 0;
-	virtual godot_error set_remote_description(const char * type, const char * sdp) = 0;
-	virtual godot_error set_local_description(const char * type, const char * sdp) = 0;
+	virtual godot_error set_remote_description(const char *type, const char *sdp) = 0;
+	virtual godot_error set_local_description(const char *type, const char *sdp) = 0;
 	virtual godot_error add_ice_candidate(const char *sdpMidName, int sdpMlineIndexName, const char *sdpName) = 0;
 	virtual godot_error poll() = 0;
 

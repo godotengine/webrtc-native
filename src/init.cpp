@@ -1,6 +1,6 @@
-#include <gdnative_api_struct.gen.h>
-#include "net/WebRTCPeerNative.hpp"
 #include "WebRTCPeer.hpp"
+#include "net/WebRTCPeerNative.hpp"
+#include <gdnative_api_struct.gen.h>
 
 /* Godot export stuff */
 extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
