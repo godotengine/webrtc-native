@@ -3,11 +3,6 @@
 
 #include "api/peerconnectioninterface.h" // interface for all things needed from WebRTC
 #include "media/base/mediaengine.h" // needed for CreateModularPeerConnectionFactory
-#ifdef interface
-#pragma message("\n 'interface' is defined \n")
-#undef interface
-#endif // interface
-
 #include <functional> // std::function
 #include <mutex> // mutex @TODO replace std::mutex with Godot mutex
 
@@ -16,8 +11,8 @@
 
 namespace godot_webrtc {
 
-class WebRTCPeer : public WebRTCPeerNative {
-	GODOT_CLASS(WebRTCPeer, WebRTCPeerNative);
+class WebRTCLibPeer : public WebRTCPeerNative {
+	GODOT_CLASS(WebRTCLibPeer, WebRTCPeerNative);
 
 public:
 	static void _register_methods();
@@ -36,13 +31,13 @@ public:
 	godot_error poll();
 
 	/* WebRTCPeer */
-	virtual godot_error get_packet(const uint8_t **r_buffer, int &r_len);
+	virtual godot_error get_packet(const uint8_t **r_buffer, int *r_len);
 	virtual godot_error put_packet(const uint8_t *p_buffer, int p_len);
 	virtual godot_int get_available_packet_count() const;
 	virtual godot_int get_max_packet_size() const;
 
-	WebRTCPeer();
-	~WebRTCPeer();
+	WebRTCLibPeer();
+	~WebRTCLibPeer();
 
 	/* helper functions */
 
@@ -54,9 +49,9 @@ public:
 	/** DataChannelObserver callback functions **/
 	class GodotDCO : public webrtc::DataChannelObserver {
 	public:
-		WebRTCPeer *parent;
+		WebRTCLibPeer *parent;
 
-		GodotDCO(WebRTCPeer *parent);
+		GodotDCO(WebRTCLibPeer *parent);
 		void OnMessage(const webrtc::DataBuffer &buffer) override;
 		void OnStateChange() override; // UNUSED
 		void OnBufferedAmountChange(uint64_t previous_amount) override; // UNUSED
@@ -65,9 +60,9 @@ public:
 	/** PeerConnectionObserver callback functions **/
 	class GodotPCO : public webrtc::PeerConnectionObserver {
 	public:
-		WebRTCPeer *parent;
+		WebRTCLibPeer *parent;
 
-		GodotPCO(WebRTCPeer *parent);
+		GodotPCO(WebRTCLibPeer *parent);
 		void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override;
 		void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
 		void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
@@ -81,9 +76,9 @@ public:
 	/** CreateSessionDescriptionObserver callback functions **/
 	class GodotCSDO : public webrtc::CreateSessionDescriptionObserver {
 	public:
-		WebRTCPeer *parent;
+		WebRTCLibPeer *parent;
 
-		GodotCSDO(WebRTCPeer *parent);
+		GodotCSDO(WebRTCLibPeer *parent);
 		void OnSuccess(webrtc::SessionDescriptionInterface *desc) override;
 		void OnFailure(const std::string &error) override;
 	};
@@ -91,9 +86,9 @@ public:
 	/** SetSessionDescriptionObserver callback functions **/
 	class GodotSSDO : public webrtc::SetSessionDescriptionObserver {
 	public:
-		WebRTCPeer *parent;
+		WebRTCLibPeer *parent;
 
-		GodotSSDO(WebRTCPeer *parent);
+		GodotSSDO(WebRTCLibPeer *parent);
 		void OnSuccess() override;
 		void OnFailure(const std::string &error) override;
 	};

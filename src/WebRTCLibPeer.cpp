@@ -1,23 +1,23 @@
-#include "WebRTCPeer.hpp"
+#include "WebRTCLibPeer.hpp"
 
 using namespace godot_webrtc;
 
-void WebRTCPeer::set_write_mode(godot_int mode) {
+void WebRTCLibPeer::set_write_mode(godot_int mode) {
 }
 
-godot_int WebRTCPeer::get_write_mode() const {
+godot_int WebRTCLibPeer::get_write_mode() const {
 	return 0;
 }
 
-bool WebRTCPeer::was_string_packet() const {
+bool WebRTCLibPeer::was_string_packet() const {
 	return false;
 }
 
-godot_int WebRTCPeer::get_connection_state() const {
+godot_int WebRTCLibPeer::get_connection_state() const {
 	return 0;
 }
 
-godot_error WebRTCPeer::create_offer() {
+godot_error WebRTCLibPeer::create_offer() {
 	peer_connection->CreateOffer(
 			ptr_csdo, // CreateSessionDescriptionObserver* observer,
 			nullptr // webrtc::PeerConnectionInterface::RTCOfferAnswerOptions() // const MediaConstraintsInterface* constraints
@@ -25,17 +25,17 @@ godot_error WebRTCPeer::create_offer() {
 	return GODOT_OK;
 }
 
-godot_error WebRTCPeer::set_remote_description(const char *type, const char *sdp) {
+godot_error WebRTCLibPeer::set_remote_description(const char *type, const char *sdp) {
 	godot_error err = set_description(type, sdp, false); //false meaning !isLocal because it is remote
 	peer_connection->CreateAnswer(ptr_csdo, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 	return err;
 }
 
-godot_error WebRTCPeer::set_local_description(const char *type, const char *sdp) {
+godot_error WebRTCLibPeer::set_local_description(const char *type, const char *sdp) {
 	return set_description(type, sdp, true); // isLocal == true
 }
 
-godot_error WebRTCPeer::add_ice_candidate(const char *sdpMidName, int sdpMlineIndexName, const char *sdpName) {
+godot_error WebRTCLibPeer::add_ice_candidate(const char *sdpMidName, int sdpMlineIndexName, const char *sdpName) {
 	webrtc::SdpParseError *error = nullptr;
 	webrtc::IceCandidateInterface *candidate = webrtc::CreateIceCandidate(
 			sdpMidName,
@@ -52,7 +52,7 @@ godot_error WebRTCPeer::add_ice_candidate(const char *sdpMidName, int sdpMlineIn
 	return GODOT_OK;
 }
 
-godot_error WebRTCPeer::poll() {
+godot_error WebRTCLibPeer::poll() {
 	std::function<void()> signal;
 	while (!signal_queue.empty()) {
 		mutex_signal_queue->lock();
@@ -65,13 +65,13 @@ godot_error WebRTCPeer::poll() {
 	return GODOT_OK;
 }
 
-godot_error WebRTCPeer::get_packet(const uint8_t **r_buffer, int &r_len) {
+godot_error WebRTCLibPeer::get_packet(const uint8_t **r_buffer, int *r_len) {
 	if (packet_queue_size == 0)
 		return GODOT_ERR_UNAVAILABLE;
 	mutex_packet_queue->lock();
 	uint8_t *current_packet = packet_queue.front();
 	*r_buffer = current_packet;
-	r_len = packet_sizes_queue.front();
+	*r_len = packet_sizes_queue.front();
 
 	packet_queue.pop();
 	packet_sizes_queue.pop();
@@ -81,24 +81,24 @@ godot_error WebRTCPeer::get_packet(const uint8_t **r_buffer, int &r_len) {
 	return GODOT_OK;
 }
 
-godot_error WebRTCPeer::put_packet(const uint8_t *p_buffer, int p_len) {
+godot_error WebRTCLibPeer::put_packet(const uint8_t *p_buffer, int p_len) {
 	webrtc::DataBuffer webrtc_buffer(rtc::CopyOnWriteBuffer(p_buffer, p_len), true);
 	data_channel->Send(webrtc_buffer);
 	return GODOT_OK; // @TODO properly return any Error we may get.
 }
 
-godot_int WebRTCPeer::get_available_packet_count() const {
+godot_int WebRTCLibPeer::get_available_packet_count() const {
 	return packet_queue_size;
 }
 
-godot_int WebRTCPeer::get_max_packet_size() const {
+godot_int WebRTCLibPeer::get_max_packet_size() const {
 	return 1200;
 }
 
-void WebRTCPeer::_register_methods() {
+void WebRTCLibPeer::_register_methods() {
 }
 
-void WebRTCPeer::_init() {
+void WebRTCLibPeer::_init() {
 	register_interface(&interface);
 
 	// initialize variables:
@@ -118,7 +118,7 @@ void WebRTCPeer::_init() {
 			nullptr // std::unique_ptr<RtcEventLogFactoryInterface> event_log_factory
 	);
 	if (pc_factory.get() == nullptr) { // PeerConnectionFactory couldn't be created. Fail the method call.
-		godot_print_error("PeerConnectionFactory could not be created", "_init", "WebRTCPeer.cpp", 80);
+		ERR_PRINT("PeerConnectionFactory could not be created");
 		// return GODOT_FAILED;
 	}
 
@@ -132,7 +132,7 @@ void WebRTCPeer::_init() {
 	// create a PeerConnection object:
 	peer_connection = pc_factory->CreatePeerConnection(configuration, nullptr, nullptr, &pco);
 	if (peer_connection.get() == nullptr) { // PeerConnection couldn't be created. Fail the method call.
-		godot_print_error("PeerConnection could not be created", "_init", "WebRTCPeer.cpp", 101);
+		ERR_PRINT("PeerConnection could not be created");
 		// return GODOT_FAILED;
 	}
 
@@ -146,14 +146,14 @@ void WebRTCPeer::_init() {
 	data_channel->RegisterObserver(&dco);
 }
 
-WebRTCPeer::WebRTCPeer() :
+WebRTCLibPeer::WebRTCLibPeer() :
 		dco(this),
 		pco(this),
 		ptr_csdo(new rtc::RefCountedObject<GodotCSDO>(this)),
 		ptr_ssdo(new rtc::RefCountedObject<GodotSSDO>(this)) {
 }
 
-WebRTCPeer::~WebRTCPeer() {
+WebRTCLibPeer::~WebRTCLibPeer() {
 	if (_owner) {
 		register_interface(NULL);
 	}
@@ -161,7 +161,7 @@ WebRTCPeer::~WebRTCPeer() {
 	delete mutex_packet_queue;
 }
 
-void WebRTCPeer::queue_signal(godot::String p_name, int p_argc, const godot::Variant &p_arg1, const godot::Variant &p_arg2, const godot::Variant &p_arg3) {
+void WebRTCLibPeer::queue_signal(godot::String p_name, int p_argc, const godot::Variant &p_arg1, const godot::Variant &p_arg2, const godot::Variant &p_arg3) {
 	mutex_signal_queue->lock();
 	signal_queue.push(
 			[this, p_name, p_argc, p_arg1, p_arg2, p_arg3] {
@@ -173,7 +173,7 @@ void WebRTCPeer::queue_signal(godot::String p_name, int p_argc, const godot::Var
 	mutex_signal_queue->unlock();
 }
 
-void WebRTCPeer::queue_packet(uint8_t *buffer, int buffer_size) {
+void WebRTCLibPeer::queue_packet(uint8_t *buffer, int buffer_size) {
 	mutex_packet_queue->lock();
 	packet_queue.push(buffer);
 	packet_sizes_queue.push(buffer_size);
@@ -181,7 +181,7 @@ void WebRTCPeer::queue_packet(uint8_t *buffer, int buffer_size) {
 	mutex_packet_queue->unlock();
 }
 
-godot_error WebRTCPeer::set_description(const char *type, const char *sdp, bool isLocal) {
+godot_error WebRTCLibPeer::set_description(const char *type, const char *sdp, bool isLocal) {
 	// webrtc::SdpType type = (isOffer) ? webrtc::SdpType::kOffer : webrtc::SdpType::kAnswer;
 	godot::String string_sdp = sdp;
 

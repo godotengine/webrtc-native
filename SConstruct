@@ -111,12 +111,12 @@ elif target_platform == "windows":
     # Mostly VisualStudio
     if env["CC"] == "cl":
         env.Append(CCFLAGS=["/DWEBRTC_WIN", "/DWIN32_LEAN_AND_MEAN", "/DNOMINMAX", "/DRTC_UNUSED=", "/DNO_RETURN="])
-        env.Append(LINKFLAGS=[p + env["LIBSUFFIX"] for p in ["secur32", lib_name]])
+        env.Append(LINKFLAGS=[p + env["LIBSUFFIX"] for p in ["secur32", "advapi32", "winmm", lib_name]])
         env.Append(LIBPATH=[lib_path])
     # Mostly "gcc"
     else:
         env.Append(CCFLAGS=["-DWINVER=0x0603", "-D_WIN32_WINNT=0x0603", "-DWEBRTC_WIN", "-DWIN32_LEAN_AND_MEAN", "-DNOMINMAX", "-DRTC_UNUSED=", "-DNO_RETURN="])
-        env.Append(LIBS=["secur32", lib_name])
+        env.Append(LINKFLAGS=[p + env["LIBSUFFIX"] for p in ["secur32", "advapi32", "winmm", lib_name]])
         env.Append(LIBPATH=[lib_path])
 
 elif target_platform == "osx":

@@ -1,4 +1,4 @@
-#include "WebRTCPeer.hpp"
+#include "WebRTCLibPeer.hpp"
 #include "net/WebRTCPeerNative.hpp"
 #include <gdnative_api_struct.gen.h>
 
@@ -21,5 +21,5 @@ extern "C" void GDN_EXPORT godot_gdnative_terminate(godot_gdnative_terminate_opt
 extern "C" void GDN_EXPORT godot_nativescript_init(void *handle) {
 	godot::Godot::nativescript_init(handle);
 
-	godot::register_class<godot_webrtc::WebRTCPeer>();
+	godot::register_class<godot_webrtc::WebRTCLibPeer>();
 }
