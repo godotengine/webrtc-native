@@ -8,7 +8,7 @@
 #include <net/godot_net.h>
 
 /* Forward declare interface functions */
-godot_error get_packet_wp(void *, const uint8_t **, int &);
+godot_error get_packet_wp(void *, const uint8_t **, int *);
 godot_error put_packet_wp(void *, const uint8_t *, int);
 godot_int get_available_packet_count_wp(const void *);
 godot_int get_max_packet_size_wp(const void *);
@@ -29,7 +29,7 @@ class WebRTCPeerNative : public godot::WebRTCPeerGDNative {
 
 protected:
 	godot_net_webrtc_peer interface = {
-		{3, 1},
+		{ 3, 1 },
 		this,
 
 		&get_packet_wp,
@@ -63,13 +63,13 @@ public:
 	virtual godot_int get_connection_state() const = 0;
 
 	virtual godot_error create_offer() = 0;
-	virtual godot_error set_remote_description(const char * type, const char * sdp) = 0;
-	virtual godot_error set_local_description(const char * type, const char * sdp) = 0;
+	virtual godot_error set_remote_description(const char *type, const char *sdp) = 0;
+	virtual godot_error set_local_description(const char *type, const char *sdp) = 0;
 	virtual godot_error add_ice_candidate(const char *sdpMidName, int sdpMlineIndexName, const char *sdpName) = 0;
 	virtual godot_error poll() = 0;
 
 	/* PacketPeer */
-	virtual godot_error get_packet(const uint8_t **r_buffer, int &r_len) = 0;
+	virtual godot_error get_packet(const uint8_t **r_buffer, int *r_len) = 0;
 	virtual godot_error put_packet(const uint8_t *p_buffer, int p_len) = 0;
 	virtual godot_int get_available_packet_count() const = 0;
 	virtual godot_int get_max_packet_size() const = 0;
