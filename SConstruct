@@ -22,7 +22,7 @@ result_path = 'bin'
 result_name = 'webrtc_native'
 
 if target_platform == 'linux':
-    result_name += '.linux.' + target_arch
+    result_name += '.linux.' + target + '.' + target_arch
 
     env['CXX']='g++'
     if ARGUMENTS.get('use_llvm', 'no') == 'yes':
@@ -45,7 +45,7 @@ elif target_platform == 'windows':
     else:
         env = Environment(ENV = os.environ, TARGET_ARCH='x86')
 
-    result_name += '.windows.' + target_arch
+    result_name += '.windows.' + target + '.' + target_arch
 
     if host_platform == 'Windows':
         #result_name += '.lib'
@@ -70,11 +70,14 @@ elif target_platform == 'osx':
 
     # Only 64-bits is supported for OS X
     target_arch = '64'
-    result_name += '.osx.' + target_arch
+    result_name += '.osx.' + target + '.' + target_arch
 
     env.Append(CCFLAGS = [ '-g','-O3', '-std=c++14', '-arch', 'x86_64' ])
     env.Append(LINKFLAGS = [ '-arch', 'x86_64', '-framework', 'Cocoa', '-Wl,-undefined,dynamic_lookup' ])
 
+else:
+    print("No valid target platform selected.")
+    sys.exit(1)
 
 # Godot CPP bindings
 env.Append(CPPPATH=[godot_headers])
