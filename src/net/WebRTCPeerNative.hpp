@@ -52,7 +52,7 @@ protected:
 
 public:
 	static void _register_methods();
-	static const godot_gdnative_ext_net_api_struct *_net_api;
+	static const godot_gdnative_ext_net_3_2_api_struct *_net_api;
 
 	void _init();
 	void register_interface(const godot_net_webrtc_peer *interface);

@@ -1,6 +1,6 @@
 #include "WebRTCPeerNative.hpp"
 
-const godot_gdnative_ext_net_api_struct *WebRTCPeerNative::_net_api = NULL;
+const godot_gdnative_ext_net_3_2_api_struct *WebRTCPeerNative::_net_api = NULL;
 
 void WebRTCPeerNative::register_interface(const godot_net_webrtc_peer *p_interface) {
 	ERR_FAIL_COND(!_net_api);
