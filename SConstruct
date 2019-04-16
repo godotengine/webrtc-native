@@ -10,23 +10,42 @@ def add_sources(sources, dirpath, extension):
 
 
 env = Environment()
+customs = ['custom.py']
+opts = Variables(customs, ARGUMENTS)
+
+opts.Add(BoolVariable('use_llvm', 'Use the LLVM compiler', False))
+opts.Add(EnumVariable('target', "Compilation target", 'debug', ('debug', 'release')))
+
+# Update environment (parse options)
+opts.Update(env)
+
+target = env['target']
+
 host_platform = platform.system()
 target_platform = ARGUMENTS.get('p', ARGUMENTS.get('platform', 'linux'))
 target_arch = ARGUMENTS.get('a', ARGUMENTS.get('arch', '64'))
-# default to debug build, must be same setting as used for cpp_bindings
-target = ARGUMENTS.get('target', 'debug')
 # Local dependency paths, adapt them to your setup
 godot_headers = ARGUMENTS.get('headers', '../godot_headers')
-godot_cpp = ARGUMENTS.get('godot-cpp', '../godot-cpp')
+godot_cpp_headers = ARGUMENTS.get('godot_cpp_headers', '../godot-cpp/include')
+godot_cpp_lib_dir = ARGUMENTS.get('godot_cpp_lib_dir', 'lib/godot-cpp')
 result_path = 'bin'
 result_name = 'webrtc_native'
+
+# Convenience check to enforce the use_llvm overrides when CXX is clang(++)
+if 'CXX' in env and 'clang' in os.path.basename(env['CXX']):
+        env['use_llvm'] = True
 
 if target_platform == 'linux':
     result_name += '.linux.' + target + '.' + target_arch
 
     env['CXX']='g++'
-    if ARGUMENTS.get('use_llvm', 'no') == 'yes':
-        env['CXX'] = 'clang++'
+
+    # LLVM
+    if env['use_llvm']:
+        if ('clang++' not in os.path.basename(env['CXX'])):
+            env['CC'] = 'clang'
+            env["CXX"] = "clang++"
+            env["LINK"] = "clang++"
 
     env.Append(CCFLAGS = [ '-fPIC', '-g', '-O3', '-std=c++14', '-Wwrite-strings' ])
 
@@ -81,14 +100,14 @@ else:
 
 # Godot CPP bindings
 env.Append(CPPPATH=[godot_headers])
-env.Append(CPPPATH=[godot_cpp + '/include', godot_cpp + '/include/core', godot_cpp + '/include/gen'])
-env.Append(LIBPATH=[godot_cpp + '/bin'])
+env.Append(CPPPATH=[godot_cpp_headers, godot_cpp_headers + '/core', godot_cpp_headers + '/gen'])
+env.Append(LIBPATH=[godot_cpp_lib_dir + '/' + target])
 env.Append(LIBS=['godot-cpp'])
 
 # WebRTC stuff
-webrtc_dir = "webrtc"
+webrtc_dir = "lib/webrtc"
 lib_name = 'libwebrtc_full'
-lib_path = webrtc_dir + '/lib'
+lib_path = webrtc_dir + '/lib/' + target_platform
 
 if target_arch == '64':
     lib_path += '/x64'
@@ -101,7 +120,6 @@ else:
     lib_path += '/Release'
 
 env.Append(CPPPATH=[webrtc_dir + "/include"])
-#env.Append(CPPPATH=[lib_path])
 
 if target_platform == "linux":
     env.Append(LIBS=[lib_name])
@@ -125,12 +143,6 @@ elif target_platform == "windows":
 elif target_platform == "osx":
     env.Append(LIBS=[lib_name])
     env.Append(LIBPATH=[lib_path])
-
-# Godot CPP bindings
-env.Append(CPPPATH=[godot_headers])
-env.Append(CPPPATH=[godot_cpp + '/include', godot_cpp + '/include/core', godot_cpp + '/include/gen'])
-env.Append(LIBPATH=[godot_cpp + '/bin'])
-env.Append(LIBS=['godot-cpp'])
 
 # Our includes and sources
 env.Append(CPPPATH=['src/'])
