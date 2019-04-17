@@ -47,7 +47,13 @@ if target_platform == 'linux':
             env["CXX"] = "clang++"
             env["LINK"] = "clang++"
 
-    env.Append(CCFLAGS = [ '-fPIC', '-g', '-O3', '-std=c++14', '-Wwrite-strings' ])
+    if (env["target"] == "debug"):
+        env.Prepend(CCFLAGS=['-g3'])
+        env.Append(LINKFLAGS=['-rdynamic'])
+    else:
+        env.Prepend(CCFLAGS=['-O3'])
+
+    env.Append(CCFLAGS=['-fPIC', '-std=c++11'])
 
     if target_arch == '32':
         env.Append(CCFLAGS = [ '-m32' ])
@@ -84,7 +90,7 @@ elif target_platform == 'windows':
         env.Append(LINKFLAGS = [ '--static', '-Wl,--no-undefined', '-static-libgcc', '-static-libstdc++' ])
 
 elif target_platform == 'osx':
-    if ARGUMENTS.get('use_llvm', 'no') == 'yes':
+    if env['use_llvm']:
         env['CXX'] = 'clang++'
 
     # Only 64-bits is supported for OS X
