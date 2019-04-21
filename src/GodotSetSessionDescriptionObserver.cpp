@@ -1,11 +1,11 @@
-#include "WebRTCLibPeer.hpp"
+#include "WebRTCLibPeerConnection.hpp"
 
 using namespace godot_webrtc;
 
-WebRTCLibPeer::GodotSSDO::GodotSSDO(WebRTCLibPeer *parent) {
+WebRTCLibPeerConnection::GodotSSDO::GodotSSDO(WebRTCLibPeerConnection *parent) {
 	this->parent = parent;
 }
 
-void WebRTCLibPeer::GodotSSDO::OnSuccess(){};
+void WebRTCLibPeerConnection::GodotSSDO::OnSuccess(){};
 
-void WebRTCLibPeer::GodotSSDO::OnFailure(const std::string &error){};
+void WebRTCLibPeerConnection::GodotSSDO::OnFailure(const std::string &error){};

@@ -1,5 +1,6 @@
-#include "WebRTCLibPeer.hpp"
-#include "net/WebRTCPeerNative.hpp"
+#include "WebRTCLibDataChannel.hpp"
+#include "WebRTCLibPeerConnection.hpp"
+#include "net/WebRTCPeerConnectionNative.hpp"
 #include <gdnative_api_struct.gen.h>
 
 /* Godot export stuff */
@@ -16,7 +17,7 @@ extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
 			break;
 
 		if (net_api->next->version.major == 3 && net_api->next->version.minor == 2) {
-			WebRTCPeerNative::_net_api = (const godot_gdnative_ext_net_3_2_api_struct *)net_api->next;
+			WebRTCPeerConnectionNative::_net_api = (const godot_gdnative_ext_net_3_2_api_struct *)net_api->next;
 		}
 	}
 
@@ -30,5 +31,6 @@ extern "C" void GDN_EXPORT godot_gdnative_terminate(godot_gdnative_terminate_opt
 extern "C" void GDN_EXPORT godot_nativescript_init(void *handle) {
 	godot::Godot::nativescript_init(handle);
 
-	godot::register_class<godot_webrtc::WebRTCLibPeer>();
+	godot::register_class<godot_webrtc::WebRTCLibPeerConnection>();
+	godot::register_class<godot_webrtc::WebRTCLibDataChannel>();
 }

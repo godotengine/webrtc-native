@@ -4,3 +4,4 @@ bin/*
 *.lib
 .sconsign.dblite
 *.obj
+*.swp
