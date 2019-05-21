@@ -9,6 +9,13 @@ def add_sources(sources, dirpath, extension):
           sources.append(dirpath + '/' + f)
 
 
+def get_arch_dir(name):
+    if name == '32':
+        return 'x86'
+    elif name == '64':
+        return 'x64'
+    return name
+
 env = Environment()
 customs = ['custom.py']
 opts = Variables(customs, ARGUMENTS)
@@ -107,7 +114,7 @@ else:
 # Godot CPP bindings
 env.Append(CPPPATH=[godot_headers])
 env.Append(CPPPATH=[godot_cpp_headers, godot_cpp_headers + '/core', godot_cpp_headers + '/gen'])
-env.Append(LIBPATH=[godot_cpp_lib_dir + '/' + target])
+env.Append(LIBPATH=[godot_cpp_lib_dir + '/' + target + '/' + get_arch_dir(target_arch)])
 env.Append(LIBS=['godot-cpp'])
 
 # WebRTC stuff
@@ -155,6 +162,10 @@ env.Append(CPPPATH=['src/'])
 sources = []
 add_sources(sources, 'src/', 'cpp')
 add_sources(sources, 'src/net/', 'cpp')
+
+# Suffix
+suffix = '.%s.%s' % (target, target_arch)
+env["SHOBJSUFFIX"] = suffix + env["SHOBJSUFFIX"]
 
 # Make the shared library
 library = env.SharedLibrary(target=os.path.join(result_path, result_name), source=sources)
