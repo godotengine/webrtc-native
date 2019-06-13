@@ -9,13 +9,6 @@ def add_sources(sources, dirpath, extension):
           sources.append(dirpath + '/' + f)
 
 
-def get_arch_dir(name):
-    if name == '32':
-        return 'x86'
-    elif name == '64':
-        return 'x64'
-    return name
-
 def gen_gdnative_lib(target, source, env):
     for t in target:
         with open(t.srcnode().path, 'w') as w:
@@ -49,10 +42,11 @@ target = env['target']
 
 host_platform = platform.system()
 # Local dependency paths, adapt them to your setup
-godot_headers = ARGUMENTS.get('headers', '../godot_headers')
-godot_cpp_headers = ARGUMENTS.get('godot_cpp_headers', '../godot-cpp/include')
-godot_cpp_lib_dir = ARGUMENTS.get('godot_cpp_lib_dir', 'lib/godot-cpp')
+godot_headers = ARGUMENTS.get('headers', 'godot-cpp/godot_headers')
+godot_cpp_headers = ARGUMENTS.get('godot_cpp_headers', 'godot-cpp/include')
+godot_cpp_lib_dir = ARGUMENTS.get('godot_cpp_lib_dir', 'godot-cpp/bin')
 result_path = os.path.join('bin', 'webrtc' if env['target'] == 'release' else 'webrtc_debug', 'lib')
+lib_prefix = ""
 
 # Convenience check to enforce the use_llvm overrides when CXX is clang(++)
 if 'CXX' in env and 'clang' in os.path.basename(env['CXX']):
@@ -86,6 +80,7 @@ if target_platform == 'linux':
 elif target_platform == 'windows':
     if host_platform == 'Windows':
 
+        lib_prefix = "lib"
         env.Append(LINKFLAGS = [ '/WX' ])
         if target == 'debug':
             env.Append(CCFLAGS = ['/EHsc', '/D_DEBUG', '/MDd' ])
@@ -117,8 +112,8 @@ else:
 # Godot CPP bindings
 env.Append(CPPPATH=[godot_headers])
 env.Append(CPPPATH=[godot_cpp_headers, godot_cpp_headers + '/core', godot_cpp_headers + '/gen'])
-env.Append(LIBPATH=[godot_cpp_lib_dir + '/' + target + '/' + get_arch_dir(target_arch)])
-env.Append(LIBS=['godot-cpp'])
+env.Append(LIBPATH=[godot_cpp_lib_dir])
+env.Append(LIBS=['%sgodot-cpp.%s.%s.%s' % (lib_prefix, target_platform, target, target_arch)])
 
 # WebRTC stuff
 webrtc_dir = "lib/webrtc"
