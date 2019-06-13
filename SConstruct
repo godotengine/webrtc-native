@@ -116,9 +116,9 @@ env.Append(LIBPATH=[godot_cpp_lib_dir])
 env.Append(LIBS=['%sgodot-cpp.%s.%s.%s' % (lib_prefix, target_platform, target, target_arch)])
 
 # WebRTC stuff
-webrtc_dir = "lib/webrtc"
+webrtc_dir = "webrtc"
 lib_name = 'libwebrtc_full'
-lib_path = webrtc_dir + '/lib/' + target_platform
+lib_path = os.path.join(webrtc_dir, target_platform)
 
 if target_arch == '64':
     lib_path += '/x64'
