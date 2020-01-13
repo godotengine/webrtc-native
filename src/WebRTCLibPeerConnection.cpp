@@ -172,7 +172,10 @@ godot_error WebRTCLibPeerConnection::poll() {
 }
 
 void WebRTCLibPeerConnection::close() {
-	peer_connection->Close();
+	if (peer_connection.get() != nullptr) {
+		peer_connection->Close();
+	}
+	peer_connection = nullptr;
 	while(!signal_queue.empty()) {
 		signal_queue.pop();
 	}
