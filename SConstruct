@@ -35,10 +35,30 @@ opts = Variables(customs, ARGUMENTS)
 opts.Add(BoolVariable('use_llvm', 'Use the LLVM compiler', False))
 opts.Add(EnumVariable('target', "Compilation target", 'debug', ('debug', 'release')))
 
+opts.Add(EnumVariable(
+    'android_arch',
+    'Target Android architecture',
+    'armv7',
+    ['armv7','arm64v8', 'x86', 'x86_64']
+))
+opts.Add(
+    'android_api_level',
+    'Target Android API level',
+    '18' if ARGUMENTS.get("android_arch", 'armv7') in ['armv7', 'x86'] else '21'
+)
+opts.Add(
+    'ANDROID_NDK_ROOT',
+    'Path to your Android NDK installation. By default, uses ANDROID_NDK_ROOT from your defined environment variables.',
+    os.environ.get("ANDROID_NDK_ROOT", None)
+)
+
 # Update environment (parse options)
 opts.Update(env)
 
 target = env['target']
+
+if target_platform == 'android':
+    target_arch = env['android_arch']
 
 host_platform = platform.system()
 # Local dependency paths, adapt them to your setup
@@ -105,6 +125,58 @@ elif target_platform == 'osx':
     env.Append(CCFLAGS = [ '-g','-O3', '-std=c++14', '-arch', 'x86_64' ])
     env.Append(LINKFLAGS = [ '-arch', 'x86_64', '-framework', 'Cocoa', '-Wl,-undefined,dynamic_lookup' ])
 
+elif target_platform == 'android':
+    # Verify NDK root
+    if not 'ANDROID_NDK_ROOT' in env:
+        raise ValueError("To build for Android, ANDROID_NDK_ROOT must be defined. Please set ANDROID_NDK_ROOT to the root folder of your Android NDK installation.")
+
+    # Validate API level
+    api_level = int(env['android_api_level'])
+    if target_arch in ['arm64v8', 'x86_64'] and api_level < 21:
+        print("WARN: 64-bit Android architectures require an API level of at least 21; setting android_api_level=21")
+        env['android_api_level'] = '21'
+        api_level = 21
+
+    # Setup toolchain
+    toolchain = env['ANDROID_NDK_ROOT'] + "/toolchains/llvm/prebuilt/"
+    if host_platform == "Windows":
+        toolchain += "windows"
+        import platform as pltfm
+        if pltfm.machine().endswith("64"):
+            toolchain += "-x86_64"
+    elif host_platform == "Linux":
+        toolchain += "linux-x86_64"
+    elif host_platform == "Darwin":
+        toolchain += "darwin-x86_64"
+
+    # Get architecture info
+    arch_info_table = {
+        "armv7" : {
+            "march":"armv7-a", "target":"armv7a-linux-androideabi", "tool_path":"arm-linux-androideabi", "compiler_path":"armv7a-linux-androideabi",
+            "ccflags" : ['-mfpu=neon']
+            },
+        "arm64v8" : {
+            "march":"armv8-a", "target":"aarch64-linux-android", "tool_path":"aarch64-linux-android", "compiler_path":"aarch64-linux-android",
+            "ccflags" : []
+            },
+        "x86" : {
+            "march":"i686", "target":"i686-linux-android", "tool_path":"i686-linux-android", "compiler_path":"i686-linux-android",
+            "ccflags" : ['-mstackrealign']
+            },
+        "x86_64" : {"march":"x86-64", "target":"x86_64-linux-android", "tool_path":"x86_64-linux-android", "compiler_path":"x86_64-linux-android",
+            "ccflags" : []
+            }
+    }
+    arch_info = arch_info_table[target_arch]
+
+    # Setup tools
+    env['CC'] = toolchain + "/bin/clang"
+    env['CXX'] = toolchain + "/bin/clang++"
+
+    env.Append(CCFLAGS=['--target=' + arch_info['target'] + env['android_api_level'], '-march=' + arch_info['march'], '-fPIC'])
+    env.Append(CCFLAGS=arch_info['ccflags'])
+    env.Append(LINKFLAGS=['--target=' + arch_info['target'] + env['android_api_level'], '-march=' + arch_info['march']])
+
 else:
     print("No valid target platform selected.")
     sys.exit(1)
@@ -120,10 +192,12 @@ webrtc_dir = "webrtc"
 lib_name = 'libwebrtc_full'
 lib_path = os.path.join(webrtc_dir, target_platform)
 
-if target_arch == '64':
-    lib_path += '/x64'
-elif target_arch == '32':
-    lib_path += '/x86'
+lib_path += {'32': '/x86',
+             '64': '/x64',
+             'armv7': '/arm',
+             'arm64v8': '/arm64',
+             'x86': '/x86',
+             'x86_64': '/x64'}[target_arch]
 
 if target == 'debug':
     lib_path += '/Debug'
@@ -155,6 +229,18 @@ elif target_platform == "osx":
     env.Append(LIBS=[lib_name])
     env.Append(LIBPATH=[lib_path])
 
+elif target_platform == "android":
+    env.Append(LIBS=['log'])
+    env.Append(LIBS=[lib_name])
+    env.Append(LIBPATH=[lib_path])
+    env.Append(CCFLAGS=["-DWEBRTC_POSIX", "-DWEBRTC_LINUX", "-DWEBRTC_ANDROID"])
+    env.Append(CCFLAGS=["-DRTC_UNUSED=''", "-DNO_RETURN=''"])
+
+    if target_arch == 'arm64v8':
+        env.Append(CCFLAGS=["-DWEBRTC_ARCH_ARM64", "-DWEBRTC_HAS_NEON"])
+    elif target_arch == 'armv7':
+        env.Append(CCFLAGS=["-DWEBRTC_ARCH_ARM", "-DWEBRTC_ARCH_ARM_V7", "-DWEBRTC_HAS_NEON"])
+
 # Our includes and sources
 env.Append(CPPPATH=['src/'])
 sources = []
@@ -166,7 +252,8 @@ suffix = '.%s.%s' % (target, target_arch)
 env["SHOBJSUFFIX"] = suffix + env["SHOBJSUFFIX"]
 
 # Make the shared library
-result_name = 'webrtc_native.%s.%s.%s' % (target_platform, target, target_arch)
+result_name = 'webrtc_native.%s.%s.%s' % (target_platform, target, target_arch) + env["SHLIBSUFFIX"]
+
 library = env.SharedLibrary(target=os.path.join(result_path, result_name), source=sources)
 Default(library)
 
