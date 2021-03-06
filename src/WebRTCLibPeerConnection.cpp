@@ -32,7 +32,7 @@ godot_error _parse_ice_server(webrtc::PeerConnectionInterface::RTCConfiguration 
 	if (p_server.has("username") && (v = p_server["username"]) && v.get_type() == godot::Variant::STRING) {
 		ice_server.username = (v.operator godot::String()).utf8().get_data();
 	}
-	if (p_server.has("credential") && (v = p_server["credential"]) && v.get_type() == godot::Variant::STRING) {
+	if (p_server.has("credentials") && (v = p_server["credentials"]) && v.get_type() == godot::Variant::STRING) {
 		ice_server.password = (v.operator godot::String()).utf8().get_data();
 	}
 
