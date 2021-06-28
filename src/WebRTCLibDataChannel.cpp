@@ -1,5 +1,8 @@
 #include "WebRTCLibDataChannel.hpp"
 
+#include "GDNativeLibrary.hpp"
+#include "NativeScript.hpp"
+
 using namespace godot_webrtc;
 
 // Channel observer
@@ -26,12 +29,12 @@ WebRTCLibDataChannel *WebRTCLibDataChannel::new_data_channel(rtc::scoped_refptr<
 	godot::WebRTCDataChannelGDNative *out = godot::WebRTCDataChannelGDNative::_new();
 	// Set our implementation as it's script
 	godot::NativeScript *script = godot::NativeScript::_new();
-	script->set_library(godot::get_wrapper<godot::GDNativeLibrary>((godot_object *)godot::gdnlib));
+	script->set_library(godot::detail::get_wrapper<godot::GDNativeLibrary>((godot_object *)godot::gdnlib));
 	script->set_class_name("WebRTCLibDataChannel");
 	out->set_script(script);
 
 	// Bind the data channel to the ScriptInstance userdata (our script)
-	WebRTCLibDataChannel *tmp = godot::as<WebRTCLibDataChannel>(out);
+	WebRTCLibDataChannel *tmp = out->cast_to<WebRTCLibDataChannel>(out);
 	tmp->bind_channel(p_channel);
 
 	return tmp;
