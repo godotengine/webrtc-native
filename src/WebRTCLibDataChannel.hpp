@@ -3,8 +3,8 @@
 
 #include <Godot.hpp> // Godot.hpp must go first, or windows builds breaks
 
-#include "api/peerconnectioninterface.h" // interface for all things needed from WebRTC
-#include "media/base/mediaengine.h" // needed for CreateModularPeerConnectionFactory
+#include "api/peer_connection_interface.h" // interface for all things needed from WebRTC
+#include "media/base/media_engine.h" // needed for CreateModularPeerConnectionFactory
 
 #include "net/WebRTCDataChannelNative.hpp"
 #include "PoolArrays.hpp"

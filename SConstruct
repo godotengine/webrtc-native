@@ -115,7 +115,7 @@ if target_platform == 'linux':
     else:
         env.Prepend(CCFLAGS=['-O3'])
 
-    env.Append(CCFLAGS=['-fPIC', '-std=c++11'])
+    env.Append(CCFLAGS=['-fPIC', '-std=c++14'])
 
     if target_arch == '32':
         env.Append(CCFLAGS = [ '-m32' ])
@@ -276,7 +276,7 @@ if target == 'debug':
 else:
     lib_path += '/Release'
 
-env.Append(CPPPATH=[webrtc_dir + "/include"])
+env.Append(CPPPATH=[webrtc_dir + "/include", webrtc_dir + "/include/third_party/abseil-cpp"])
 
 if target_platform == "linux":
     env.Append(LIBS=[lib_name, "atomic"])

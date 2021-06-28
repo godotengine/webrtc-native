@@ -3,8 +3,8 @@
 
 #include <Godot.hpp> // Godot.hpp must go first, or windows builds breaks
 
-#include "api/peerconnectioninterface.h" // interface for all things needed from WebRTC
-#include "media/base/mediaengine.h" // needed for CreateModularPeerConnectionFactory
+#include "api/peer_connection_interface.h" // interface for all things needed from WebRTC
+#include "media/base/media_engine.h" // needed for CreateModularPeerConnectionFactory
 #include <functional> // std::function
 #include <mutex> // mutex @TODO replace std::mutex with Godot mutex
 
@@ -66,7 +66,7 @@ public:
 
 		GodotCSDO(WebRTCLibPeerConnection *parent);
 		void OnSuccess(webrtc::SessionDescriptionInterface *desc) override;
-		void OnFailure(const std::string &error) override;
+		void OnFailure(webrtc::RTCError error) override;
 	};
 
 	/** SetSessionDescriptionObserver callback functions **/
@@ -76,7 +76,7 @@ public:
 
 		GodotSSDO(WebRTCLibPeerConnection *parent);
 		void OnSuccess() override;
-		void OnFailure(const std::string &error) override;
+		void OnFailure(webrtc::RTCError error) override;
 	};
 
 	GodotPCO pco;
@@ -86,7 +86,7 @@ public:
 	std::mutex *mutex_signal_queue;
 	std::queue<std::function<void()> > signal_queue;
 
-	rtc::Thread *signaling_thread;
+	std::unique_ptr<rtc::Thread> signaling_thread;
 	rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pc_factory;
 	rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection;
 };

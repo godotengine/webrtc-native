@@ -15,7 +15,7 @@ void WebRTCLibPeerConnection::GodotCSDO::OnSuccess(webrtc::SessionDescriptionInt
 	parent->queue_signal("session_description_created", 2, desc->type().c_str(), sdp.c_str());
 };
 
-void WebRTCLibPeerConnection::GodotCSDO::OnFailure(const std::string &error){};
+void WebRTCLibPeerConnection::GodotCSDO::OnFailure(webrtc::RTCError error){};
 
 // SetSessionObseerver
 WebRTCLibPeerConnection::GodotSSDO::GodotSSDO(WebRTCLibPeerConnection *parent) {
@@ -23,7 +23,7 @@ WebRTCLibPeerConnection::GodotSSDO::GodotSSDO(WebRTCLibPeerConnection *parent) {
 }
 
 void WebRTCLibPeerConnection::GodotSSDO::OnSuccess(){};
-void WebRTCLibPeerConnection::GodotSSDO::OnFailure(const std::string &error){};
+void WebRTCLibPeerConnection::GodotSSDO::OnFailure(webrtc::RTCError error){};
 
 // PeerConnectionObserver
 WebRTCLibPeerConnection::GodotPCO::GodotPCO(WebRTCLibPeerConnection *parent) {
