@@ -18,8 +18,11 @@ class WebRTCLibPeerConnection : public WebRTCPeerConnectionNative {
 private:
 	godot_error _create_pc(webrtc::PeerConnectionInterface::RTCConfiguration &config);
 
+	static std::unique_ptr<rtc::Thread> signaling_thread;
 public:
 	static void _register_methods();
+	static void initialize_signaling();
+	static void deinitialize_signaling();
 
 	void _init();
 
@@ -83,10 +86,9 @@ public:
 	rtc::scoped_refptr<GodotSSDO> ptr_ssdo;
 	rtc::scoped_refptr<GodotCSDO> ptr_csdo;
 
-	std::mutex *mutex_signal_queue;
+	std::mutex *mutex_signal_queue = nullptr;
 	std::queue<std::function<void()> > signal_queue;
 
-	std::unique_ptr<rtc::Thread> signaling_thread;
 	rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> pc_factory;
 	rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection;
 };

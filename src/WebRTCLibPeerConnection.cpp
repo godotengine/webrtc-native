@@ -5,6 +5,21 @@
 
 using namespace godot_webrtc;
 
+std::unique_ptr<rtc::Thread> WebRTCLibPeerConnection::signaling_thread = nullptr;
+
+void WebRTCLibPeerConnection::initialize_signaling() {
+	if (signaling_thread.get() == nullptr) {
+		signaling_thread = rtc::Thread::Create();
+	}
+	signaling_thread->Start();
+}
+
+void WebRTCLibPeerConnection::deinitialize_signaling() {
+	if (signaling_thread.get() != nullptr) {
+		signaling_thread->Stop();
+	}
+}
+
 godot_error _parse_ice_server(webrtc::PeerConnectionInterface::RTCConfiguration &r_config, godot::Dictionary p_server) {
 	godot::Variant v;
 	webrtc::PeerConnectionInterface::IceServer ice_server;
@@ -193,8 +208,7 @@ void WebRTCLibPeerConnection::_init() {
 	// create a PeerConnectionFactoryInterface:
 	webrtc::PeerConnectionFactoryDependencies deps;
 
-	signaling_thread = rtc::Thread::Create();
-	ERR_FAIL_COND(!signaling_thread->Start());
+	ERR_FAIL_COND(signaling_thread.get() == nullptr);
 	deps.signaling_thread = signaling_thread.get();
 	pc_factory = webrtc::CreateModularPeerConnectionFactory(std::move(deps));
 

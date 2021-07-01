@@ -86,6 +86,7 @@ extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
 		}
 	}
 
+	godot_webrtc::WebRTCLibPeerConnection::initialize_signaling();
 	godot::Godot::gdnative_init(o);
 }
 
@@ -93,6 +94,7 @@ extern "C" void GDN_EXPORT godot_gdnative_terminate(godot_gdnative_terminate_opt
 	if (_singleton) { // If we are the active singleton, unregister
 		WebRTCPeerConnectionNative::_net_api->godot_net_set_webrtc_library(NULL);
 	}
+	godot_webrtc::WebRTCLibPeerConnection::deinitialize_signaling();
 	godot::Godot::gdnative_terminate(o);
 }
 
