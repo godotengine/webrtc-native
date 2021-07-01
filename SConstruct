@@ -89,7 +89,7 @@ elif target_platform == 'ios':
 
 host_platform = platform.system()
 # Local dependency paths, adapt them to your setup
-godot_headers = ARGUMENTS.get('headers', 'godot-cpp/godot_headers')
+godot_headers = ARGUMENTS.get('headers', 'godot-cpp/godot-headers')
 godot_cpp_headers = ARGUMENTS.get('godot_cpp_headers', 'godot-cpp/include')
 godot_cpp_lib_dir = ARGUMENTS.get('godot_cpp_lib_dir', 'godot-cpp/bin')
 result_path = os.path.join('bin', 'webrtc' if env['target'] == 'release' else 'webrtc_debug', 'lib')
