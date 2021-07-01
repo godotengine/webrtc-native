@@ -3,6 +3,8 @@
 [resource]
 singleton = true
 reloadable = false
+entry/OSX.64 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.osx.{TARGET}.64.dylib"
+entry/OSX.arm64 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.osx.{TARGET}.arm64.dylib"
 entry/Windows.64 = "res://{GDNATIVE_PATH}/lib/webrtc_native.windows.{TARGET}.64.dll"
 entry/Windows.32 = "res://{GDNATIVE_PATH}/lib/webrtc_native.windows.{TARGET}.32.dll"
 entry/X11.64 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.linux.{TARGET}.64.so"
@@ -11,6 +13,10 @@ entry/Server.64 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.linux.{TARGET}.64.
 entry/Server.32 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.linux.{TARGET}.32.so"
 entry/Android.armeabi-v7a = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.android.{TARGET}.armv7.so"
 entry/Android.arm64-v8a = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.android.{TARGET}.arm64v8.so"
+entry/Android.x64 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.android.{TARGET}.x86_64.so"
+entry/Android.x86 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.android.{TARGET}.x86.so"
+entry/iOS.arm64 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.ios.{TARGET}.arm64.dylib"
+entry/iOS.x86_64 = "res://{GDNATIVE_PATH}/lib/libwebrtc_native.ios.{TARGET}.x86_64.dylib"
 dependency/Windows.64 = [  ]
 dependency/Windows.32 = [  ]
 dependency/X11.64 = [  ]

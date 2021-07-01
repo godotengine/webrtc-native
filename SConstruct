@@ -1,6 +1,14 @@
 #!python
 
-import os, sys, platform, json
+import os, sys, platform, json, subprocess
+
+if sys.version_info < (3,):
+    def decode_utf8(x):
+        return x
+else:
+    import codecs
+    def decode_utf8(x):
+        return codecs.utf_8_decode(x)[0]
 
 
 def add_sources(sources, dirpath, extension):
@@ -12,7 +20,7 @@ def add_sources(sources, dirpath, extension):
 def gen_gdnative_lib(target, source, env):
     for t in target:
         with open(t.srcnode().path, 'w') as w:
-            w.write(source[0].get_contents().decode('utf8').replace('{GDNATIVE_PATH}', os.path.splitext(t.name)[0]).replace('{TARGET}', env['target']))
+            w.write(decode_utf8(source[0].get_contents()).replace('{GDNATIVE_PATH}', os.path.splitext(t.name)[0]).replace('{TARGET}', env['target']))
 
 
 env = Environment()
@@ -52,6 +60,23 @@ opts.Add(
     os.environ.get("ANDROID_NDK_ROOT", None)
 )
 
+opts.Add(EnumVariable(
+    'ios_arch',
+    'Target iOS architecture',
+    'arm64',
+    ['armv7', 'arm64', 'x86_64']
+))
+opts.Add(BoolVariable(
+    'ios_simulator',
+    'Target iOS Simulator',
+    False
+))
+opts.Add(
+    'IPHONEPATH',
+    'Path to iPhone toolchain',
+    '/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain',
+)
+
 # Update environment (parse options)
 opts.Update(env)
 
@@ -59,6 +84,8 @@ target = env['target']
 
 if target_platform == 'android':
     target_arch = env['android_arch']
+elif target_platform == 'ios':
+    target_arch = env['ios_arch']
 
 host_platform = platform.system()
 # Local dependency paths, adapt them to your setup
@@ -96,6 +123,8 @@ if target_platform == 'linux':
     elif target_arch == '64':
         env.Append(CCFLAGS = [ '-m64' ])
         env.Append(LINKFLAGS = [ '-m64' ])
+        # i386 does not like static libstdc++
+        env.Append(LINKFLAGS=['-static-libgcc', '-static-libstdc++'])
 
 elif target_platform == 'windows':
     if host_platform == 'Windows':
@@ -124,6 +153,48 @@ elif target_platform == 'osx':
 
     env.Append(CCFLAGS = [ '-g','-O3', '-std=c++14', '-arch', 'x86_64' ])
     env.Append(LINKFLAGS = [ '-arch', 'x86_64', '-framework', 'Cocoa', '-Wl,-undefined,dynamic_lookup' ])
+
+    if env['target'] == 'debug':
+        env.Append(CCFLAGS=['-Og', '-g'])
+    elif env['target'] == 'release':
+        env.Append(CCFLAGS=['-O3'])
+
+elif target_platform == 'ios':
+    if env['ios_simulator']:
+        sdk_name = 'iphonesimulator'
+        env.Append(CCFLAGS=['-mios-simulator-version-min=10.0'])
+        env['LIBSUFFIX'] = ".simulator" + env['LIBSUFFIX']
+    else:
+        sdk_name = 'iphoneos'
+        env.Append(CCFLAGS=['-miphoneos-version-min=10.0'])
+
+    try:
+        sdk_path = decode_utf8(subprocess.check_output(['xcrun', '--sdk', sdk_name, '--show-sdk-path']).strip())
+    except (subprocess.CalledProcessError, OSError):
+        raise ValueError("Failed to find SDK path while running xcrun --sdk {} --show-sdk-path.".format(sdk_name))
+
+    compiler_path = env['IPHONEPATH'] + '/usr/bin/'
+    env['ENV']['PATH'] = env['IPHONEPATH'] + "/Developer/usr/bin/:" + env['ENV']['PATH']
+
+    env['CC'] = compiler_path + 'clang'
+    env['CXX'] = compiler_path + 'clang++'
+    env['AR'] = compiler_path + 'ar'
+    env['RANLIB'] = compiler_path + 'ranlib'
+
+    env.Append(CCFLAGS=['-std=c++14', '-arch', env['ios_arch'], '-isysroot', sdk_path])
+    env.Append(LINKFLAGS=[
+        '-arch',
+        env['ios_arch'],
+        '-Wl,-undefined,dynamic_lookup',
+        '-isysroot', sdk_path,
+        '-F' + sdk_path
+    ])
+
+    if env['target'] == 'debug':
+        env.Append(CCFLAGS=['-Og', '-g'])
+    elif env['target'] == 'release':
+        env.Append(CCFLAGS=['-O3'])
+
 
 elif target_platform == 'android':
     # Verify NDK root
@@ -185,7 +256,7 @@ else:
 env.Append(CPPPATH=[godot_headers])
 env.Append(CPPPATH=[godot_cpp_headers, godot_cpp_headers + '/core', godot_cpp_headers + '/gen'])
 env.Append(LIBPATH=[godot_cpp_lib_dir])
-env.Append(LIBS=['%sgodot-cpp.%s.%s.%s' % (lib_prefix, target_platform, target, target_arch)])
+env.Append(LIBS=['%sgodot-cpp.%s.%s.%s%s' % (lib_prefix, target_platform, target, target_arch, ".simulator" if env["ios_simulator"] else "")])
 
 # WebRTC stuff
 webrtc_dir = "webrtc"
@@ -196,6 +267,7 @@ lib_path += {'32': '/x86',
              '64': '/x64',
              'armv7': '/arm',
              'arm64v8': '/arm64',
+             'arm64': '/arm64',
              'x86': '/x86',
              'x86_64': '/x64'}[target_arch]
 
@@ -207,7 +279,7 @@ else:
 env.Append(CPPPATH=[webrtc_dir + "/include"])
 
 if target_platform == "linux":
-    env.Append(LIBS=[lib_name])
+    env.Append(LIBS=[lib_name, "atomic"])
     env.Append(LIBPATH=[lib_path])
     #env.Append(CCFLAGS=["-std=c++11"])
     env.Append(CCFLAGS=["-DWEBRTC_POSIX", "-DWEBRTC_LINUX"])
@@ -228,6 +300,14 @@ elif target_platform == "windows":
 elif target_platform == "osx":
     env.Append(LIBS=[lib_name])
     env.Append(LIBPATH=[lib_path])
+    env.Append(CCFLAGS=["-DWEBRTC_POSIX", "-DWEBRTC_MAC"])
+    env.Append(CCFLAGS=["-DRTC_UNUSED=''", "-DNO_RETURN=''"])
+
+elif target_platform == 'ios':
+    env.Append(LIBS=[lib_name])
+    env.Append(LIBPATH=[lib_path])
+    env.Append(CCFLAGS=["-DWEBRTC_POSIX", "-DWEBRTC_MAC", "-DWEBRTC_IOS"])
+    env.Append(CCFLAGS=["-DRTC_UNUSED=''", "-DNO_RETURN=''"])
 
 elif target_platform == "android":
     env.Append(LIBS=['log'])
@@ -261,4 +341,4 @@ Default(library)
 gdnlib = 'webrtc'
 if target != 'release':
     gdnlib += '_debug'
-Default(env.GDNativeLibBuilder([os.path.join('bin', gdnlib, gdnlib + '.gdns')], ['misc/gdnlib.tres']))
+Default(env.GDNativeLibBuilder([os.path.join('bin', gdnlib, gdnlib + '.tres')], ['misc/gdnlib.tres']))
