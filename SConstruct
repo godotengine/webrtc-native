@@ -141,7 +141,12 @@ elif target_platform == 'windows':
         elif target_arch == '64':
             env['CXX']='x86_64-w64-mingw32-g++'
 
-        env.Append(CCFLAGS = [ '-g', '-O3', '-std=c++14', '-Wwrite-strings' ])
+        if env['target'] == 'debug':
+            env.Append(CCFLAGS=['-Og', '-g'])
+        elif env['target'] == 'release':
+            env.Append(CCFLAGS=['-O3'])
+
+        env.Append(CCFLAGS = [ '-std=c++14', '-Wwrite-strings' ])
         env.Append(LINKFLAGS = [ '--static', '-Wl,--no-undefined', '-static-libgcc', '-static-libstdc++' ])
 
 elif target_platform == 'osx':
@@ -151,7 +156,7 @@ elif target_platform == 'osx':
     # Only 64-bits is supported for OS X
     target_arch = '64'
 
-    env.Append(CCFLAGS = [ '-g','-O3', '-std=c++14', '-arch', 'x86_64' ])
+    env.Append(CCFLAGS = [ '-std=c++14', '-arch', 'x86_64' ])
     env.Append(LINKFLAGS = [ '-arch', 'x86_64', '-framework', 'Cocoa', '-Wl,-undefined,dynamic_lookup' ])
 
     if env['target'] == 'debug':
@@ -247,6 +252,11 @@ elif target_platform == 'android':
     env.Append(CCFLAGS=['--target=' + arch_info['target'] + env['android_api_level'], '-march=' + arch_info['march'], '-fPIC'])
     env.Append(CCFLAGS=arch_info['ccflags'])
     env.Append(LINKFLAGS=['--target=' + arch_info['target'] + env['android_api_level'], '-march=' + arch_info['march']])
+
+    if env['target'] == 'debug':
+        env.Append(CCFLAGS=['-Og', '-g'])
+    elif env['target'] == 'release':
+        env.Append(CCFLAGS=['-O3'])
 
 else:
     print("No valid target platform selected.")
