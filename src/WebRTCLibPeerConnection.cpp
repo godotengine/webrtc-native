@@ -5,6 +5,21 @@
 
 using namespace godot_webrtc;
 
+std::unique_ptr<rtc::Thread> WebRTCLibPeerConnection::signaling_thread = nullptr;
+
+void WebRTCLibPeerConnection::initialize_signaling() {
+	if (signaling_thread.get() == nullptr) {
+		signaling_thread = rtc::Thread::Create();
+	}
+	signaling_thread->Start();
+}
+
+void WebRTCLibPeerConnection::deinitialize_signaling() {
+	if (signaling_thread.get() != nullptr) {
+		signaling_thread->Stop();
+	}
+}
+
 godot_error _parse_ice_server(webrtc::PeerConnectionInterface::RTCConfiguration &r_config, godot::Dictionary p_server) {
 	godot::Variant v;
 	webrtc::PeerConnectionInterface::IceServer ice_server;
@@ -57,7 +72,7 @@ godot_error _parse_channel_config(webrtc::DataChannelInit &r_config, godot::Dict
 	// ID makes sense only when negotiated is true (and must be set in that case)
 	ERR_FAIL_COND_V(r_config.negotiated ? r_config.id == -1 : r_config.id != -1, GODOT_ERR_INVALID_PARAMETER);
 	// Only one of maxRetransmits and maxRetransmitTime can be set on a channel.
-	ERR_FAIL_COND_V(r_config.maxRetransmits != -1 && r_config.maxRetransmitTime != -1, GODOT_ERR_INVALID_PARAMETER);
+	ERR_FAIL_COND_V(r_config.maxRetransmits && r_config.maxRetransmitTime, GODOT_ERR_INVALID_PARAMETER);
 	return GODOT_OK;
 }
 
@@ -119,7 +134,7 @@ godot_object *WebRTCLibPeerConnection::create_data_channel(const char *p_channel
 
 godot_error WebRTCLibPeerConnection::create_offer() {
 	ERR_FAIL_COND_V(peer_connection.get() == nullptr, GODOT_ERR_UNCONFIGURED);
-	peer_connection->CreateOffer(ptr_csdo, nullptr);
+	peer_connection->CreateOffer(ptr_csdo, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 	return GODOT_OK;
 }
 
@@ -191,16 +206,11 @@ void WebRTCLibPeerConnection::_init() {
 	mutex_signal_queue = new std::mutex;
 
 	// create a PeerConnectionFactoryInterface:
-	signaling_thread = new rtc::Thread;
-	signaling_thread->Start();
-	pc_factory = webrtc::CreateModularPeerConnectionFactory(
-			nullptr, // rtc::Thread* network_thread,
-			nullptr, // rtc::Thread* worker_thread,
-			signaling_thread,
-			nullptr, // std::unique_ptr<cricket::MediaEngineInterface> media_engine,
-			nullptr, // std::unique_ptr<CallFactoryInterface> call_factory,
-			nullptr // std::unique_ptr<RtcEventLogFactoryInterface> event_log_factory
-	);
+	webrtc::PeerConnectionFactoryDependencies deps;
+
+	ERR_FAIL_COND(signaling_thread.get() == nullptr);
+	deps.signaling_thread = signaling_thread.get();
+	pc_factory = webrtc::CreateModularPeerConnectionFactory(std::move(deps));
 
 	// Create peer connection with default configuration.
 	webrtc::PeerConnectionInterface::RTCConfiguration config;
