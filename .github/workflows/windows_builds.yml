@@ -1,0 +1,77 @@
+name: 🏁 Windows Builds
+on: [push, pull_request]
+
+# Global Settings
+env:
+  GODOT_BASE_BRANCH: 3.x
+  SCONSFLAGS: platform=windows --jobs=2
+  SCONS_CACHE_LIMIT: 4096
+
+jobs:
+  windows-base:
+    runs-on: "windows-latest"
+    name: Windows Builds
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      - name: Get WebRTC package
+        run: |
+          cd webrtc/
+          curl -L https://github.com/Faless/webrtc-builds/releases/download/4472-33644-92ba70c/webrtc-33644-92ba70c-win-x64.7z -o x64.7z
+          curl -L https://github.com/Faless/webrtc-builds/releases/download/4472-33644-92ba70c/webrtc-33644-92ba70c-win-x86.7z -o x86.7z
+          7z x -y x64.7z
+          7z x -y x86.7z
+          dir
+          move lib windows
+
+      # Setup MSVC compiler for x86 builds
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_x86
+
+      - name: Build x86 - Debug
+        run: |
+            scons target=debug bits=32 generate_bindings=yes -C godot-cpp
+            scons target=debug bits=32
+
+      - name: Build x86 - Release
+        run: |
+            scons target=release bits=32 generate_bindings=yes bits=32 -C godot-cpp
+            scons target=release bits=32
+
+      # Setup MSVC compiler for x64 builds
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
+
+      - name: Build x64 - Debug
+        run: |
+            scons target=debug bits=64 generate_bindings=yes -C godot-cpp
+            scons target=debug bits=64
+
+      - name: Build x64 - Release
+        run: |
+            scons target=release bits=64 generate_bindings=yes -C godot-cpp
+            scons target=release bits=64
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: bin/*
+          retention-days: 14

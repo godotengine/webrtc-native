@@ -1,0 +1,57 @@
+name: 🍎 macOS Builds
+on: [push, pull_request]
+
+# Global Settings
+env:
+  SCONSFLAGS: platform=osx --jobs=2
+  SCONS_CACHE_LIMIT: 4096
+
+jobs:
+  macos-base:
+    runs-on: "macos-latest"
+    name: macOS builds
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      - name: Get WebRTC package
+        run: |
+          cd webrtc/
+          curl -L https://github.com/Faless/webrtc-builds/releases/download/4472-33644-92ba70c/webrtc-33644-92ba70c-mac-x64.tar.gz -o x64.tar.gz
+          tar -xzf x64.tar.gz
+          mv lib osx
+          ls -l
+          ls -l *
+
+      - name: Compilation x64 - Debug
+        run: |
+          scons target=debug  generate_bindings=yes -C godot-cpp
+          scons target=debug
+          ls -l bin/*
+
+      - name: Compilation x64 - Release
+        run: |
+          scons target=release -C godot-cpp
+          scons target=release
+          ls -l bin/*
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: bin/*
+          retention-days: 14

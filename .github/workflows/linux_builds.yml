@@ -1,0 +1,75 @@
+name: 🐧 Linux Builds
+on: [push, pull_request]
+
+# Global Settings
+env:
+  SCONSFLAGS: platform=linux --jobs=2
+  SCONS_CACHE_LIMIT: 4096
+
+jobs:
+  linux-base:
+    runs-on: "ubuntu-20.04"
+    name: Linux builds
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Configure dependencies
+        run: |
+          sudo apt-get install build-essential gcc-multilib wget g++-multilib
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      - name: Get WebRTC package
+        run: |
+          cd webrtc/
+          wget https://github.com/Faless/webrtc-builds/releases/download/4472-33644-92ba70c/webrtc-33644-92ba70c-linux-x64.tar.gz
+          wget https://github.com/Faless/webrtc-builds/releases/download/4472-33644-92ba70c/webrtc-33644-92ba70c-linux-x86.tar.gz
+          tar -xzf webrtc-33644-92ba70c-linux-x64.tar.gz
+          tar -xzf webrtc-33644-92ba70c-linux-x86.tar.gz
+          mv lib linux
+          ls -l
+          ls -l *
+
+      - name: Compilation x86 - Debug
+        run: |
+          scons bits=32 target=debug generate_bindings=yes -C godot-cpp
+          scons bits=32 target=debug
+          ls -l bin/*
+
+      - name: Compilation x86 - Release
+        run: |
+          scons bits=32 target=release -C godot-cpp
+          scons bits=32 target=release
+          ls -l bin/*
+
+      - name: Compilation x64 - Debug
+        run: |
+          scons target=debug  generate_bindings=yes -C godot-cpp
+          scons target=debug
+          ls -l bin/*
+
+      - name: Compilation x64 - Release
+        run: |
+          scons target=release -C godot-cpp
+          scons target=release
+          ls -l bin/*
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: bin/*
+          retention-days: 14

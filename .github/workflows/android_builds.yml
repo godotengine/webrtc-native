@@ -1,0 +1,81 @@
+name: 🤖 Android Builds
+on: [push, pull_request]
+
+# Global Settings
+env:
+  GODOT_BASE_BRANCH: 3.x
+  SCONSFLAGS: platform=android --jobs=2
+  SCONS_CACHE_LIMIT: 4096
+  GODOT_ARCHS: "armv7 arm64v8 x86 x86_64"
+  WEBRTC_ARCHS: "arm arm64 x86 x64"
+  WEBRTC_URL: "https://github.com/Faless/webrtc-builds/releases/download/4472-33644-92ba70c/webrtc-33644-92ba70c-android-"
+
+jobs:
+  android-template:
+    runs-on: "ubuntu-20.04"
+
+    name: Android builds
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r22b
+          add-to-path: false
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      - name: Get WebRTC package
+        run: |
+          cd webrtc/
+          for arch in ${{env.WEBRTC_ARCHS}}
+          do
+            wget ${{env.WEBRTC_URL}}${arch}.tar.gz -O ${arch}.tar.gz
+            tar -xzf ${arch}.tar.gz
+          done
+          mv lib android
+          ls -l
+          ls -l *
+
+      - name: Compilation - Debug
+        run: |
+          for arch in ${{env.GODOT_ARCHS}}
+          do
+            scons android_arch=${arch} target=debug generate_bindings=yes -C godot-cpp
+            scons android_arch=${arch} target=debug
+          done
+          ls -l bin/*
+        env:
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+      - name: Compilation - Release
+        run: |
+          for arch in ${{env.GODOT_ARCHS}}
+          do
+            scons android_arch=${arch} target=release generate_bindings=yes -C godot-cpp
+            scons android_arch=${arch} target=release
+          done
+          ls -l bin/*
+        env:
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: bin/*
+          retention-days: 14
