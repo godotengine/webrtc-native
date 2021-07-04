@@ -1,0 +1,54 @@
+name: 'Get WebRTC Library'
+description: 'Get pre-build statically linked WebRTC library from Faless/webrtc-builds'
+inputs:
+  repo:
+    description: 'Base repository'
+    required: true
+    default: "Faless/webrtc-builds"
+  release:
+    description: 'Release tag'
+    required: true
+    default: '4472-33644-92ba70c'
+  webrtc-base-name:
+    description: 'The WebRTC version'
+    required: true
+    default: "webrtc-33644-92ba70c"
+  out-dir:
+    description: 'Directory where to extract the library'
+    required: true
+    default: "webrtc"
+  platform:
+    description: 'Platform to download'
+    required: true
+  archs:
+    description: 'Space separated list of architecture to fetch'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      env:
+        RTC_BASE_URL: https://github.com/${{ inputs.repo }}/releases/download/${{ inputs.release }}/${{ inputs.webrtc-base-name }}
+      run: |
+        cd ${{ inputs.out-dir }}
+        format=tar.gz
+        extract="tar -xzf"
+        libplat=${{ inputs.platform }}
+        if [ "${{ inputs.platform }}" = "windows" ]; then
+          libplat=win
+          format=7z
+          extract="7z x -y"
+        elif [ "${{ inputs.platform }}" = "osx" ]; then
+          libplat=mac
+        fi
+
+        for arch in ${{ inputs.archs }}
+        do
+          echo "Downloading ${{ env.RTC_BASE_URL }}-${{ inputs.platform }}-${arch}.tar.gz"
+          curl -L ${{ env.RTC_BASE_URL }}-${libplat}-${arch}.${format} -o ${arch}.${format}
+          ${extract} ${arch}.${format}
+        done
+
+        mv lib ${{ inputs.platform }}
+        ls -l
+        ls -l *

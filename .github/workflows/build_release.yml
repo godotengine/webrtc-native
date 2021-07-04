@@ -1,0 +1,180 @@
+name: 🔧 Build -> Package 📦
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    name: 🔧 Build
+    strategy:
+      matrix:
+        include:
+          # Android
+          - platform: android
+            arch: 'x86'
+            sconsflags: 'android_arch=x86'
+            os: 'ubuntu-20.04'
+          - platform: android
+            arch: 'x64'
+            sconsflags: 'android_arch=x86_64'
+            os: 'ubuntu-20.04'
+          - platform: android
+            arch: 'arm'
+            sconsflags: 'android_arch=armv7'
+            os: 'ubuntu-20.04'
+          - platform: android
+            arch: 'arm64'
+            sconsflags: 'android_arch=arm64v8'
+            os: 'ubuntu-20.04'
+
+          # iOS
+          - platform: ios
+            arch: 'x64'
+            sconsflags: 'ios_arch=x86_64 ios_simulator=true'
+            os: 'macos-latest'
+          - platform: ios
+            arch: 'arm'
+            sconsflags: 'ios_arch=armv7'
+            os: 'macos-latest'
+          - platform: ios
+            arch: 'arm64'
+            sconsflags: 'ios_arch=arm64'
+            os: 'macos-latest'
+
+          # Linux
+          - platform: linux
+            arch: 'x86'
+            sconsflags: 'bits=32'
+            os: 'ubuntu-20.04'
+          - platform: linux
+            arch: 'x64'
+            sconsflags: 'bits=64'
+            os: 'ubuntu-20.04'
+
+          # macOS
+          - platform: osx
+            arch: 'x64'
+            sconsflags: 'bits=64'
+            os: 'macos-latest'
+
+          # Windows
+          - platform: windows
+            arch: 'x86'
+            sconsflags: 'bits=32'
+            os: 'windows-latest'
+            msvc_arch: amd64_x86
+          - platform: windows
+            arch: 'x64'
+            sconsflags: 'bits=64'
+            os: 'windows-latest'
+            msvc_arch: amd64
+
+    env:
+      SCONSFLAGS: ${{ matrix.sconsflags }} platform=${{ matrix.platform }} --jobs=2
+      NDK_VERSION: 22b
+      ANDROID_NDK_ROOT: ${{github.workspace}}/android-ndk-r22b
+      MSVC_VARS: 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat'
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Cache NDK
+        id: cache-ndk
+        if: ${{ matrix.platform == 'android' }}
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.ANDROID_NDK_ROOT }}
+          key: ndk-${{ env.NDK_VERSION }}
+
+      - name: Download NDK
+        if: ${{ matrix.platform == 'android' && steps.cache-ndk.outputs.cache-hit != 'true' }}
+        id: setup-ndk
+        run: |
+          cd ${{ github.workspace }}
+          curl -L https://dl.google.com/android/repository/android-ndk-r${{ env.NDK_VERSION }}-linux-x86_64.zip -o ndk.zip
+          unzip ndk.zip
+          ls
+
+      - name: Setup MSVC build environment for ${{ matrix.msvc_arch }}
+        if: ${{ matrix.platform == 'windows' }}
+        run: "'${{ env.MSVC_VARS }}' ${{ matrix.msvc_arch }}"
+
+      - name: Install Linux build dependencies
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          sudo apt-get install build-essential gcc-multilib wget g++-multilib
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+
+      - name: Configuring Python packages
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m pip install scons
+          python --version
+          scons --version
+
+      - name: Get WebRTC package for ${{ matrix.platform }} - ${{ matrix.arch }}
+        uses: ./.github/actions/webrtc-download
+        with:
+          platform: ${{ matrix.platform }}
+          archs: ${{ matrix.arch }}
+
+      - name: Compilation ${{ matrix.platform }} - ${{ matrix.arch }} - godot-cpp
+        run: |
+          scons -C godot-cpp target=debug generate_bindings=yes
+          scons -C godot-cpp target=release
+
+      - name: Compilation ${{ matrix.platform }} - ${{ matrix.arch }} - webrtc-native
+        run: |
+          scons target=debug
+          scons target=release
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}-${{ matrix.platform }}-${{ matrix.arch }}
+          path: bin/*
+
+  package:
+    name: 📦 Package
+    needs: build
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+
+      - name: Package artifacts for release
+        run: |
+          mkdir release
+          cd release
+          for name in webrtc webrtc_debug
+          do
+            mkdir -p ${name}/lib/
+            find ../artifacts -wholename "*/${name}/lib/*" | xargs cp -t ${name}/lib/
+            find ../artifacts -wholename "*/${name}/${name}.tres" | head -n 1 | xargs cp -t ${name}/
+          done
+
+          zip -r godot-webrtc-native-release.zip webrtc
+          zip -r godot-webrtc-native-debug.zip webrtc_debug
+          ls -R
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: godot-webrtc-native-debug.zip
+          path: release/godot-webrtc-native-debug.zip
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: godot-webrtc-native-release.zip
+          path: release/godot-webrtc-native-release.zip
