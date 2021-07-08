@@ -7,15 +7,15 @@
 
 ### Compiling
 
-Clone this repository with the following command to checkout both [godot-cpp](https://github.com/GodotNativeTools/godot-cpp) and [godot_headers](https://github.com/GodotNativeTools/godot_headers) dependencies.
+Clone this repository with the following command to checkout both [godot-cpp](https://github.com/godotengine/godot-cpp) and [godot-headers](https://github.com/godotengine/godot-headers) dependencies.
 
 ```
-$ git clone --recurse-submodules git@github.com:godotengine/webrtc-native.git
+$ git clone --recurse-submodules https://github.com/godotengine/webrtc-native.git
 ```
 
 Note that if you wish to use a specific branch, add the -b option to the clone command:
 ```
-$ git clone --recurse-submodules -b 3.2 git@github.com:godotengine/webrtc-native.git
+$ git clone --recurse-submodules -b 3.2 https://github.com/godotengine/webrtc-native.git
 ```
 
 If you already checked out the branch use the following commands to update the dependencies:
@@ -29,7 +29,7 @@ Right now our directory structure should look like this:
 webrtc-native/
 ├─bin/
 ├─godot-cpp/
-| └─godot_headers/
+| └─godot-headers/
 ├─src/
 └─webrtc/
 ```
@@ -54,7 +54,12 @@ $ cd ..
 
 ### Building WebRTC
 
-Use [this script](https://github.com/Faless/webrtc-builds) to build and package the WebRTCLibrary (`branch-heads/68`), or [**download latest pre-compiled binaries**](https://github.com/Faless/webrtc-builds/releases)
+Building WebRTC is quite a complex task, involves huge downloads and long build times, and produces multiple output libraries that needs to bundled together.
+
+To make things easier, a set of [GitHub Actions](https://docs.github.com/en/actions) are used to generate the library for this plugin, [available in this repository](https://github.com/godotengine/webrtc-actions).
+
+Alternatively, [**download the latest pre-compiled libraries**](https://github.com/godotengine/webrtc-actions/releases).
+
 Extract content of `include` into `webrtc/include` and content of `bin` into `webrtc/<your platform>`
 
 ### Compiling the plugin.
@@ -63,4 +68,4 @@ Extract content of `include` into `webrtc/include` and content of `bin` into `we
 $ scons platform=<your platform> target=<your target>
 ```
 
-The generated library and associated `gdns` will be placed in `bin/webrtc/` or `bin/webrtc_debug/` according to the desired target. You simply need to copy that folder into your project.
+The generated library and associated `tres` will be placed in `bin/webrtc/` or `bin/webrtc_debug/` according to the desired target. You simply need to copy that folder to the root folder of your project.
