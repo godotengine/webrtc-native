@@ -7,6 +7,25 @@ using namespace godot_webrtc;
 
 std::unique_ptr<rtc::Thread> WebRTCLibPeerConnection::signaling_thread = nullptr;
 
+// PeerConnectionObserver
+void WebRTCLibPeerConnection::GodotPCO::OnIceCandidate(const webrtc::IceCandidateInterface *candidate) {
+	godot::Dictionary candidateSDP;
+	godot::String candidateSdpMidName = candidate->sdp_mid().c_str();
+	int candidateSdpMlineIndexName = candidate->sdp_mline_index();
+	std::string sdp;
+	candidate->ToString(&sdp);
+	godot::String candidateSdpName = sdp.c_str();
+	parent->queue_signal("ice_candidate_created", 3, candidateSdpMidName, candidateSdpMlineIndexName, candidateSdpName);
+}
+
+// CreateSessionDescriptionObserver
+void WebRTCLibPeerConnection::GodotCSDO::OnSuccess(webrtc::SessionDescriptionInterface *desc) {
+	// serialize this offer and send it to the remote peer:
+	std::string sdp;
+	desc->ToString(&sdp);
+	parent->queue_signal("session_description_created", 2, desc->type().c_str(), sdp.c_str());
+}
+
 void WebRTCLibPeerConnection::initialize_signaling() {
 	if (signaling_thread.get() == nullptr) {
 		signaling_thread = rtc::Thread::Create();

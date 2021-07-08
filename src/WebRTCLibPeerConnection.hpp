@@ -49,35 +49,46 @@ public:
 	public:
 		WebRTCLibPeerConnection *parent;
 
-		GodotPCO(WebRTCLibPeerConnection *parent);
-		void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override;
-		void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
-		void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override;
-		void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override;
-		void OnRenegotiationNeeded() override;
-		void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) override;
-		void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state) override;
+		GodotPCO(WebRTCLibPeerConnection *p_parent) {
+			parent = p_parent;
+		}
 		void OnIceCandidate(const webrtc::IceCandidateInterface *candidate) override;
+
+		void OnSignalingChange(webrtc::PeerConnectionInterface::SignalingState new_state) override {}
+		void OnAddStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override {}
+		void OnRemoveStream(rtc::scoped_refptr<webrtc::MediaStreamInterface> stream) override {}
+		void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {}
+		void OnRenegotiationNeeded() override {}
+		void OnIceConnectionChange(webrtc::PeerConnectionInterface::IceConnectionState new_state) override {}
+		void OnIceGatheringChange(webrtc::PeerConnectionInterface::IceGatheringState new_state) override {}
 	};
 
 	/** CreateSessionDescriptionObserver callback functions **/
 	class GodotCSDO : public webrtc::CreateSessionDescriptionObserver {
 	public:
-		WebRTCLibPeerConnection *parent;
+		WebRTCLibPeerConnection *parent = nullptr;
 
-		GodotCSDO(WebRTCLibPeerConnection *parent);
+		GodotCSDO(WebRTCLibPeerConnection *p_parent) {
+			parent = p_parent;
+		}
 		void OnSuccess(webrtc::SessionDescriptionInterface *desc) override;
-		void OnFailure(webrtc::RTCError error) override;
+		void OnFailure(webrtc::RTCError error) override {
+			ERR_PRINT(godot::String(error.message()));
+		}
 	};
 
 	/** SetSessionDescriptionObserver callback functions **/
 	class GodotSSDO : public webrtc::SetSessionDescriptionObserver {
 	public:
-		WebRTCLibPeerConnection *parent;
+		WebRTCLibPeerConnection *parent = nullptr;
 
-		GodotSSDO(WebRTCLibPeerConnection *parent);
-		void OnSuccess() override;
-		void OnFailure(webrtc::RTCError error) override;
+		GodotSSDO(WebRTCLibPeerConnection *p_parent) {
+			parent = p_parent;
+		}
+		void OnSuccess() override {}
+		void OnFailure(webrtc::RTCError error) override {
+			ERR_PRINT(godot::String(error.message()));
+		}
 	};
 
 	class Signal {
