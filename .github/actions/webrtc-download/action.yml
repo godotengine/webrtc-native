@@ -4,7 +4,7 @@ inputs:
   repo:
     description: 'Base repository'
     required: true
-    default: "Faless/webrtc-builds"
+    default: "godotengine/webrtc-actions"
   release:
     description: 'Release tag'
     required: true
@@ -31,13 +31,10 @@ runs:
         RTC_BASE_URL: https://github.com/${{ inputs.repo }}/releases/download/${{ inputs.release }}/${{ inputs.webrtc-base-name }}
       run: |
         cd ${{ inputs.out-dir }}
-        format=tar.gz
-        extract="tar -xzf"
+
         libplat=${{ inputs.platform }}
         if [ "${{ inputs.platform }}" = "windows" ]; then
           libplat=win
-          format=7z
-          extract="7z x -y"
         elif [ "${{ inputs.platform }}" = "osx" ]; then
           libplat=mac
         fi
@@ -45,8 +42,8 @@ runs:
         for arch in ${{ inputs.archs }}
         do
           echo "Downloading ${{ env.RTC_BASE_URL }}-${{ inputs.platform }}-${arch}.tar.gz"
-          curl -L ${{ env.RTC_BASE_URL }}-${libplat}-${arch}.${format} -o ${arch}.${format}
-          ${extract} ${arch}.${format}
+          curl -L ${{ env.RTC_BASE_URL }}-${libplat}-${arch}.tar.gz -o ${arch}.tar.gz
+          tar -xzf ${arch}.tar.gz
         done
 
         mv lib ${{ inputs.platform }}
