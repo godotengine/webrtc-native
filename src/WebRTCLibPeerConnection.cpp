@@ -7,6 +7,33 @@ using namespace godot_webrtc;
 
 std::unique_ptr<rtc::Thread> WebRTCLibPeerConnection::signaling_thread = nullptr;
 
+// PeerConnectionObserver
+void WebRTCLibPeerConnection::GodotPCO::OnIceCandidate(const webrtc::IceCandidateInterface *candidate) {
+	godot::Dictionary candidateSDP;
+	godot::String candidateSdpMidName = candidate->sdp_mid().c_str();
+	int candidateSdpMlineIndexName = candidate->sdp_mline_index();
+	std::string sdp;
+	candidate->ToString(&sdp);
+	godot::String candidateSdpName = sdp.c_str();
+	parent->queue_signal("ice_candidate_created", 3, candidateSdpMidName, candidateSdpMlineIndexName, candidateSdpName);
+}
+
+// SetSessionDescriptionObserver
+void WebRTCLibPeerConnection::GodotSSDO::OnSuccess() {
+	if (make_offer) {
+		make_offer = false;
+		parent->peer_connection->CreateAnswer(parent->ptr_csdo, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+	}
+}
+
+// CreateSessionDescriptionObserver
+void WebRTCLibPeerConnection::GodotCSDO::OnSuccess(webrtc::SessionDescriptionInterface *desc) {
+	// serialize this offer and send it to the remote peer:
+	std::string sdp;
+	desc->ToString(&sdp);
+	parent->queue_signal("session_description_created", 2, desc->type().c_str(), sdp.c_str());
+}
+
 void WebRTCLibPeerConnection::initialize_signaling() {
 	if (signaling_thread.get() == nullptr) {
 		signaling_thread = rtc::Thread::Create();
@@ -142,8 +169,10 @@ godot_error WebRTCLibPeerConnection::create_offer() {
 godot_error WebRTCLibPeerConnection::set_remote_description(const char *type, const char *sdp) {
 	ERR_FAIL_COND_V(peer_connection.get() == nullptr, GODOT_ERR_UNCONFIGURED);
 	std::unique_ptr<webrtc::SessionDescriptionInterface> desc = _MAKE_DESC(type, sdp);
+	if (desc->GetType() == webrtc::SdpType::kOffer) {
+		ptr_ssdo->make_offer = true;
+	}
 	peer_connection->SetRemoteDescription(ptr_ssdo, desc.release());
-	peer_connection->CreateAnswer(ptr_csdo, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 	return GODOT_OK;
 }
 
@@ -174,14 +203,12 @@ godot_error WebRTCLibPeerConnection::add_ice_candidate(const char *sdpMidName, i
 godot_error WebRTCLibPeerConnection::poll() {
 	ERR_FAIL_COND_V(peer_connection.get() == nullptr, GODOT_ERR_UNCONFIGURED);
 
-	std::function<void()> signal;
 	while (!signal_queue.empty()) {
 		mutex_signal_queue->lock();
-		signal = signal_queue.front();
+		Signal signal = signal_queue.front();
 		signal_queue.pop();
 		mutex_signal_queue->unlock();
-
-		signal();
+		signal.emit(this);
 	}
 	return GODOT_OK;
 }
@@ -244,15 +271,7 @@ WebRTCLibPeerConnection::~WebRTCLibPeerConnection() {
 
 void WebRTCLibPeerConnection::queue_signal(godot::String p_name, int p_argc, const godot::Variant &p_arg1, const godot::Variant &p_arg2, const godot::Variant &p_arg3) {
 	mutex_signal_queue->lock();
-	signal_queue.push(
-			[this, p_name, p_argc, p_arg1, p_arg2, p_arg3] {
-				if (p_argc == 1) {
-					emit_signal(p_name, p_arg1);
-				} else if (p_argc == 2) {
-					emit_signal(p_name, p_arg1, p_arg2);
-				} else {
-					emit_signal(p_name, p_arg1, p_arg2, p_arg3);
-				}
-			});
+	const godot::Variant argv[3] = { p_arg1, p_arg2, p_arg3 };
+	signal_queue.push(Signal(p_name, p_argc, argv));
 	mutex_signal_queue->unlock();
 }
