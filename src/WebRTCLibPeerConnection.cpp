@@ -18,6 +18,14 @@ void WebRTCLibPeerConnection::GodotPCO::OnIceCandidate(const webrtc::IceCandidat
 	parent->queue_signal("ice_candidate_created", 3, candidateSdpMidName, candidateSdpMlineIndexName, candidateSdpName);
 }
 
+// SetSessionDescriptionObserver
+void WebRTCLibPeerConnection::GodotSSDO::OnSuccess() {
+	if (make_offer) {
+		make_offer = false;
+		parent->peer_connection->CreateAnswer(parent->ptr_csdo, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+	}
+}
+
 // CreateSessionDescriptionObserver
 void WebRTCLibPeerConnection::GodotCSDO::OnSuccess(webrtc::SessionDescriptionInterface *desc) {
 	// serialize this offer and send it to the remote peer:
@@ -161,8 +169,10 @@ godot_error WebRTCLibPeerConnection::create_offer() {
 godot_error WebRTCLibPeerConnection::set_remote_description(const char *type, const char *sdp) {
 	ERR_FAIL_COND_V(peer_connection.get() == nullptr, GODOT_ERR_UNCONFIGURED);
 	std::unique_ptr<webrtc::SessionDescriptionInterface> desc = _MAKE_DESC(type, sdp);
+	if (desc->GetType() == webrtc::SdpType::kOffer) {
+		ptr_ssdo->make_offer = true;
+	}
 	peer_connection->SetRemoteDescription(ptr_ssdo, desc.release());
-	peer_connection->CreateAnswer(ptr_csdo, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 	return GODOT_OK;
 }
 

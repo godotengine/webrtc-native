@@ -40,7 +40,7 @@ public:
 	~WebRTCLibPeerConnection();
 
 	/* helper functions */
-
+private:
 	void queue_signal(godot::String p_name, int p_argc, const godot::Variant &p_arg1 = godot::Variant(), const godot::Variant &p_arg2 = godot::Variant(), const godot::Variant &p_arg3 = godot::Variant());
 	void queue_packet(uint8_t *, int);
 
@@ -81,12 +81,14 @@ public:
 	class GodotSSDO : public webrtc::SetSessionDescriptionObserver {
 	public:
 		WebRTCLibPeerConnection *parent = nullptr;
+		bool make_offer = false;
 
 		GodotSSDO(WebRTCLibPeerConnection *p_parent) {
 			parent = p_parent;
 		}
-		void OnSuccess() override {}
+		void OnSuccess() override;
 		void OnFailure(webrtc::RTCError error) override {
+			make_offer = false;
 			ERR_PRINT(godot::String(error.message()));
 		}
 	};
