@@ -1,6 +1,36 @@
+/*************************************************************************/
+/*  WebRTCLibPeerConnection.cpp                                          */
+/*************************************************************************/
+/*                       This file is part of:                           */
+/*                           GODOT ENGINE                                */
+/*                      https://godotengine.org                          */
+/*************************************************************************/
+/* Copyright (c) 2007-2021 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2014-2021 Godot Engine contributors (cf. AUTHORS.md).   */
+/*                                                                       */
+/* Permission is hereby granted, free of charge, to any person obtaining */
+/* a copy of this software and associated documentation files (the       */
+/* "Software"), to deal in the Software without restriction, including   */
+/* without limitation the rights to use, copy, modify, merge, publish,   */
+/* distribute, sublicense, and/or sell copies of the Software, and to    */
+/* permit persons to whom the Software is furnished to do so, subject to */
+/* the following conditions:                                             */
+/*                                                                       */
+/* The above copyright notice and this permission notice shall be        */
+/* included in all copies or substantial portions of the Software.       */
+/*                                                                       */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*/
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
+/*************************************************************************/
+
+#include "WebRTCLibPeerConnection.hpp"
 #include "WebRTCDataChannel.hpp"
 #include "WebRTCDataChannelGDNative.hpp"
-#include "WebRTCLibPeerConnection.hpp"
 #include "WebRTCLibDataChannel.hpp"
 
 using namespace godot_webrtc;
@@ -84,7 +114,12 @@ godot_error _parse_ice_server(webrtc::PeerConnectionInterface::RTCConfiguration 
 
 godot_error _parse_channel_config(webrtc::DataChannelInit &r_config, godot::Dictionary p_dict) {
 	godot::Variant v;
-#define _SET_N(PROP, PNAME, TYPE) if (p_dict.has(#PROP)) { v = p_dict[#PROP]; if(v.get_type() == godot::Variant::TYPE) r_config.PNAME = v; }
+#define _SET_N(PROP, PNAME, TYPE)                 \
+	if (p_dict.has(#PROP)) {                      \
+		v = p_dict[#PROP];                        \
+		if (v.get_type() == godot::Variant::TYPE) \
+			r_config.PNAME = v;                   \
+	}
 #define _SET(PROP, TYPE) _SET_N(PROP, PROP, TYPE)
 	_SET(negotiated, BOOL);
 	_SET(id, INT);
@@ -107,7 +142,7 @@ WebRTCLibPeerConnection::ConnectionState WebRTCLibPeerConnection::get_connection
 	ERR_FAIL_COND_V(peer_connection.get() == nullptr, STATE_CLOSED);
 
 	webrtc::PeerConnectionInterface::IceConnectionState state = peer_connection->ice_connection_state();
-	switch(state) {
+	switch (state) {
 		case webrtc::PeerConnectionInterface::kIceConnectionNew:
 			return STATE_NEW;
 		case webrtc::PeerConnectionInterface::kIceConnectionChecking:
@@ -218,7 +253,7 @@ void WebRTCLibPeerConnection::close() {
 		peer_connection->Close();
 	}
 	peer_connection = nullptr;
-	while(!signal_queue.empty()) {
+	while (!signal_queue.empty()) {
 		signal_queue.pop();
 	}
 }

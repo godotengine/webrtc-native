@@ -1,3 +1,33 @@
+/*************************************************************************/
+/*  init.cpp                                                             */
+/*************************************************************************/
+/*                       This file is part of:                           */
+/*                           GODOT ENGINE                                */
+/*                      https://godotengine.org                          */
+/*************************************************************************/
+/* Copyright (c) 2007-2021 Juan Linietsky, Ariel Manzur.                 */
+/* Copyright (c) 2014-2021 Godot Engine contributors (cf. AUTHORS.md).   */
+/*                                                                       */
+/* Permission is hereby granted, free of charge, to any person obtaining */
+/* a copy of this software and associated documentation files (the       */
+/* "Software"), to deal in the Software without restriction, including   */
+/* without limitation the rights to use, copy, modify, merge, publish,   */
+/* distribute, sublicense, and/or sell copies of the Software, and to    */
+/* permit persons to whom the Software is furnished to do so, subject to */
+/* the following conditions:                                             */
+/*                                                                       */
+/* The above copyright notice and this permission notice shall be        */
+/* included in all copies or substantial portions of the Software.       */
+/*                                                                       */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,       */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF    */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.*/
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY  */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
+/*************************************************************************/
+
 #include "WebRTCLibDataChannel.hpp"
 #include "WebRTCLibPeerConnection.hpp"
 #include "net/WebRTCPeerConnectionNative.hpp"
@@ -34,14 +64,14 @@ godot_error create_peer_connection_wp(godot_object *out) {
 	_singleton_api->godot_string_destroy(&s);
 
 	// Bind script to Object
-        const void *args3[] = { (void *)script };
+	const void *args3[] = { (void *)script };
 	_singleton_api->godot_method_bind_ptrcall(_set_script_mb, out, args3, nullptr);
 
 	return GODOT_OK;
 }
 
 godot_net_webrtc_library library = {
-	{3, 2},
+	{ 3, 2 },
 	&unregistered,
 	&create_peer_connection_wp,
 	NULL,
@@ -72,7 +102,6 @@ extern "C" void GDN_EXPORT godot_gdnative_singleton() {
 extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
 	const godot_gdnative_core_api_struct *api = o->api_struct;
 	for (int i = 0; i < api->num_extensions; i++) {
-
 		if (api->extensions[i]->type != GDNATIVE_EXT_NET)
 			continue;
 
