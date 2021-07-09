@@ -28,9 +28,9 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
+#include "WebRTCLibPeerConnection.hpp"
 #include "WebRTCDataChannel.hpp"
 #include "WebRTCDataChannelGDNative.hpp"
-#include "WebRTCLibPeerConnection.hpp"
 #include "WebRTCLibDataChannel.hpp"
 
 using namespace godot_webrtc;
@@ -114,7 +114,12 @@ godot_error _parse_ice_server(webrtc::PeerConnectionInterface::RTCConfiguration 
 
 godot_error _parse_channel_config(webrtc::DataChannelInit &r_config, godot::Dictionary p_dict) {
 	godot::Variant v;
-#define _SET_N(PROP, PNAME, TYPE) if (p_dict.has(#PROP)) { v = p_dict[#PROP]; if(v.get_type() == godot::Variant::TYPE) r_config.PNAME = v; }
+#define _SET_N(PROP, PNAME, TYPE)                 \
+	if (p_dict.has(#PROP)) {                      \
+		v = p_dict[#PROP];                        \
+		if (v.get_type() == godot::Variant::TYPE) \
+			r_config.PNAME = v;                   \
+	}
 #define _SET(PROP, TYPE) _SET_N(PROP, PROP, TYPE)
 	_SET(negotiated, BOOL);
 	_SET(id, INT);
@@ -137,7 +142,7 @@ WebRTCLibPeerConnection::ConnectionState WebRTCLibPeerConnection::get_connection
 	ERR_FAIL_COND_V(peer_connection.get() == nullptr, STATE_CLOSED);
 
 	webrtc::PeerConnectionInterface::IceConnectionState state = peer_connection->ice_connection_state();
-	switch(state) {
+	switch (state) {
 		case webrtc::PeerConnectionInterface::kIceConnectionNew:
 			return STATE_NEW;
 		case webrtc::PeerConnectionInterface::kIceConnectionChecking:
@@ -248,7 +253,7 @@ void WebRTCLibPeerConnection::close() {
 		peer_connection->Close();
 	}
 	peer_connection = nullptr;
-	while(!signal_queue.empty()) {
+	while (!signal_queue.empty()) {
 		signal_queue.pop();
 	}
 }

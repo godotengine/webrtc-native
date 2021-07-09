@@ -64,14 +64,14 @@ godot_error create_peer_connection_wp(godot_object *out) {
 	_singleton_api->godot_string_destroy(&s);
 
 	// Bind script to Object
-        const void *args3[] = { (void *)script };
+	const void *args3[] = { (void *)script };
 	_singleton_api->godot_method_bind_ptrcall(_set_script_mb, out, args3, nullptr);
 
 	return GODOT_OK;
 }
 
 godot_net_webrtc_library library = {
-	{3, 2},
+	{ 3, 2 },
 	&unregistered,
 	&create_peer_connection_wp,
 	NULL,
@@ -102,7 +102,6 @@ extern "C" void GDN_EXPORT godot_gdnative_singleton() {
 extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
 	const godot_gdnative_core_api_struct *api = o->api_struct;
 	for (int i = 0; i < api->num_extensions; i++) {
-
 		if (api->extensions[i]->type != GDNATIVE_EXT_NET)
 			continue;
 

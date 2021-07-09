@@ -48,6 +48,7 @@ private:
 	godot_error _create_pc(webrtc::PeerConnectionInterface::RTCConfiguration &config);
 
 	static std::unique_ptr<rtc::Thread> signaling_thread;
+
 public:
 	static void _register_methods();
 	static void initialize_signaling();
@@ -127,6 +128,7 @@ private:
 		godot::String method;
 		godot::Variant argv[3];
 		int argc = 0;
+
 	public:
 		Signal(godot::String p_method, int p_argc, const godot::Variant *p_argv) {
 			method = p_method;

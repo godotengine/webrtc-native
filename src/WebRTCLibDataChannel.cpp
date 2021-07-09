@@ -70,7 +70,6 @@ WebRTCLibDataChannel *WebRTCLibDataChannel::new_data_channel(rtc::scoped_refptr<
 	return tmp;
 }
 
-
 void WebRTCLibDataChannel::bind_channel(rtc::scoped_refptr<webrtc::DataChannelInterface> p_channel) {
 	ERR_FAIL_COND(p_channel.get() == nullptr);
 
@@ -150,7 +149,7 @@ godot_error WebRTCLibDataChannel::poll() {
 }
 
 void WebRTCLibDataChannel::close() {
-	if(channel.get() != nullptr) {
+	if (channel.get() != nullptr) {
 		channel->Close();
 		channel->UnregisterObserver();
 	}
@@ -197,7 +196,8 @@ void WebRTCLibDataChannel::_init() {
 	register_interface(&interface);
 }
 
-WebRTCLibDataChannel::WebRTCLibDataChannel() : observer(this) {
+WebRTCLibDataChannel::WebRTCLibDataChannel() :
+		observer(this) {
 	mutex = new std::mutex;
 }
 
