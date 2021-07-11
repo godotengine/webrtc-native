@@ -70,6 +70,8 @@ opts.Add(
     "Path to iPhone toolchain",
     "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain",
 )
+opts.Add("macos_sdk_path", "macOS SDK path", "")
+opts.Add(EnumVariable("macos_arch", "Target macOS architecture", "x86_64", ["x86_64", "arm64"]))
 
 # Update environment (parse options)
 opts.Update(env)
@@ -149,9 +151,15 @@ elif target_platform == "osx":
 
     # Only 64-bits is supported for OS X
     target_arch = "64"
+    if env["macos_arch"] != "x86_64":
+        target_arch = "arm64"
 
-    env.Append(CCFLAGS=["-std=c++14", "-arch", "x86_64"])
-    env.Append(LINKFLAGS=["-arch", "x86_64", "-framework", "Cocoa", "-Wl,-undefined,dynamic_lookup"])
+    env.Append(CCFLAGS=["-std=c++14", "-arch", env["macos_arch"]])
+    env.Append(LINKFLAGS=["-arch", env["macos_arch"], "-framework", "Cocoa", "-Wl,-undefined,dynamic_lookup"])
+
+    if env["macos_sdk_path"]:
+        env.Append(CCFLAGS=["-isysroot", env["macos_sdk_path"]])
+        env.Append(LINKFLAGS=["-isysroot", env["macos_sdk_path"]])
 
     if env["target"] == "debug":
         env.Append(CCFLAGS=["-Og", "-g"])

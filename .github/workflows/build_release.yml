@@ -82,6 +82,10 @@ jobs:
             arch: 'x64'
             sconsflags: 'bits=64'
             os: 'macos-latest'
+          - platform: osx
+            arch: 'arm64'
+            sconsflags: 'bits=64 macos_arch=arm64 macos_sdk_path=/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/'
+            os: 'macos-10.15'
 
           # Windows
           - platform: windows
@@ -154,6 +158,17 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
           archs: ${{ matrix.arch }}
+
+      - name: Fix godot-cpp revision and file names for OSX arm64 build.
+        if: ${{ matrix.platform == 'osx' && matrix.arch == 'arm64' }}
+        run: |
+          cd godot-cpp
+          git checkout e08ecdc28c5409cb5366027227e996c342dcee93
+          rm -rf src/gen/
+          rm -rf include/gen/
+          mkdir bin
+          ln -s libgodot-cpp.osx.debug.64.a bin/libgodot-cpp.osx.debug.arm64.a
+          ln -s libgodot-cpp.osx.release.64.a bin/libgodot-cpp.osx.release.arm64.a
 
       - name: Compilation ${{ matrix.platform }} - ${{ matrix.arch }} - godot-cpp
         run: |
