@@ -113,6 +113,10 @@ bool is_negotiated_wdc(const void *user) {
 	return ((WebRTCDataChannelNative *)user)->is_negotiated();
 }
 
+int get_buffered_amount_wdc(const void *user) {
+	return ((WebRTCDataChannelNative *)user)->get_buffered_amount();
+}
+
 godot_error poll_wdc(void *user) {
 	return ((WebRTCDataChannelNative *)user)->poll();
 }

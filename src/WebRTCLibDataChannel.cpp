@@ -144,6 +144,11 @@ bool WebRTCLibDataChannel::is_negotiated() const {
 	return channel->negotiated();
 }
 
+int WebRTCLibDataChannel::get_buffered_amount() const {
+	ERR_FAIL_COND_V(channel.get() == nullptr, 0);
+	return channel->buffered_amount();
+}
+
 godot_error WebRTCLibDataChannel::poll() {
 	return GODOT_OK;
 }

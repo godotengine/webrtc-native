@@ -54,13 +54,30 @@ int get_max_packet_life_time_wdc(const void *);
 int get_max_retransmits_wdc(const void *);
 const char *get_protocol_wdc(const void *);
 bool is_negotiated_wdc(const void *);
+int get_buffered_amount_wdc(const void *);
 godot_error poll_wdc(void *);
 void close_wdc(void *);
+
+#if GODOT_NET_WEBRTC_API_MAJOR == 3 && GODOT_NET_WEBRTC_API_MINOR < 4
+extern "C" {
+/* Extensions to WebRTCDataChannel */
+typedef struct {
+	int (*get_buffered_amount)(const void *);
+
+	void *next; /* For extension? */
+} godot_net_webrtc_data_channel_ext;
+}
+#endif
 
 class WebRTCDataChannelNative : public godot::WebRTCDataChannelGDNative {
 	GODOT_CLASS(WebRTCDataChannelNative, godot::WebRTCDataChannelGDNative);
 
 protected:
+	godot_net_webrtc_data_channel_ext interface_ext = {
+		&get_buffered_amount_wdc,
+		NULL,
+	};
+
 	godot_net_webrtc_data_channel interface = {
 		{ 3, 1 },
 		this,
@@ -84,7 +101,7 @@ protected:
 
 		&poll_wdc,
 		&close_wdc,
-		NULL,
+		&interface_ext,
 	};
 
 public:
@@ -105,6 +122,7 @@ public:
 	virtual int get_max_retransmits() const = 0;
 	virtual const char *get_protocol() const = 0;
 	virtual bool is_negotiated() const = 0;
+	virtual int get_buffered_amount() const = 0;
 
 	virtual godot_error poll() = 0;
 	virtual void close() = 0;

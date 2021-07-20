@@ -87,6 +87,7 @@ public:
 	int get_max_retransmits() const;
 	const char *get_protocol() const;
 	bool is_negotiated() const;
+	int get_buffered_amount() const;
 
 	godot_error poll();
 	void close();
