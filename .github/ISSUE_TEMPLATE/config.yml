@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Godot proposals
+    url: https://github.com/godotengine/godot-proposals
+    about: Please submit feature proposals about the WebRTC exposed API on the Godot proposals repository, not here.
