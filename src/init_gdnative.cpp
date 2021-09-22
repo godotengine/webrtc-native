@@ -1,5 +1,5 @@
 /*************************************************************************/
-/*  init.cpp                                                             */
+/*  init_gdnative.cpp                                                    */
 /*************************************************************************/
 /*                       This file is part of:                           */
 /*                           GODOT ENGINE                                */
@@ -78,7 +78,7 @@ godot_net_webrtc_library library = {
 };
 
 extern "C" void GDN_EXPORT godot_gdnative_singleton() {
-	if (WebRTCPeerConnectionNative::_net_api) {
+	if (godot::WebRTCPeerConnectionNative::_net_api) {
 		ERR_FAIL_COND(!godot::gdnlib);
 		_singleton_lib = godot::gdnlib;
 		ERR_FAIL_COND(!godot::api);
@@ -92,7 +92,7 @@ extern "C" void GDN_EXPORT godot_gdnative_singleton() {
 		_set_library_mb = godot::api->godot_method_bind_get_method("NativeScript", "set_library");
 		ERR_FAIL_COND(!_set_library_mb);
 		// If registration is successful _singleton will be set to true
-		_singleton = WebRTCPeerConnectionNative::_net_api->godot_net_set_webrtc_library(&library) == GODOT_OK;
+		_singleton = godot::WebRTCPeerConnectionNative::_net_api->godot_net_set_webrtc_library(&library) == GODOT_OK;
 		if (!_singleton)
 			ERR_PRINT("Failed initializing webrtc singleton library");
 	}
@@ -111,7 +111,7 @@ extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
 			break;
 
 		if (net_api->next->version.major == 3 && net_api->next->version.minor == 2) {
-			WebRTCPeerConnectionNative::_net_api = (const godot_gdnative_ext_net_3_2_api_struct *)net_api->next;
+			godot::WebRTCPeerConnectionNative::_net_api = (const godot_gdnative_ext_net_3_2_api_struct *)net_api->next;
 		}
 	}
 
@@ -121,7 +121,7 @@ extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
 
 extern "C" void GDN_EXPORT godot_gdnative_terminate(godot_gdnative_terminate_options *o) {
 	if (_singleton) { // If we are the active singleton, unregister
-		WebRTCPeerConnectionNative::_net_api->godot_net_set_webrtc_library(NULL);
+		godot::WebRTCPeerConnectionNative::_net_api->godot_net_set_webrtc_library(NULL);
 	}
 	godot_webrtc::WebRTCLibPeerConnection::deinitialize_signaling();
 	godot::Godot::gdnative_terminate(o);

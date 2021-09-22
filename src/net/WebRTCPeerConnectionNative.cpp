@@ -30,6 +30,8 @@
 
 #include "WebRTCPeerConnectionNative.hpp"
 
+using namespace godot;
+
 const godot_gdnative_ext_net_3_2_api_struct *WebRTCPeerConnectionNative::_net_api = NULL;
 
 void WebRTCPeerConnectionNative::register_interface(const godot_net_webrtc_peer_connection *p_interface) {
@@ -55,19 +57,23 @@ WebRTCPeerConnectionNative::~WebRTCPeerConnectionNative() {
  * and you could use void *user for any kind of state struct pointer you have.
  */
 godot_int get_connection_state_wp(const void *user) {
-	return (godot_int)((WebRTCPeerConnectionNative *)user)->get_connection_state();
+	return (godot_int)((WebRTCPeerConnectionNative *)user)->_get_connection_state();
 }
 
 godot_error initialize_wp(void *user, const godot_dictionary *p_config) {
-	return ((WebRTCPeerConnectionNative *)user)->initialize(p_config);
+	return (godot_error)(((WebRTCPeerConnectionNative *)user)->_initialize(*(Dictionary *)p_config));
 }
 
 godot_object *create_data_channel_wp(void *user, const char *p_channel, const godot_dictionary *p_channel_config) {
-	return ((WebRTCPeerConnectionNative *)user)->create_data_channel(p_channel, p_channel_config);
+	Object *ptr = ((WebRTCPeerConnectionNative *)user)->_create_data_channel(p_channel, *(Dictionary *)p_channel_config);
+	if (ptr) {
+		return ptr->_owner;
+	}
+	return nullptr;
 }
 
 godot_error create_offer_wp(void *user) {
-	return ((WebRTCPeerConnectionNative *)user)->create_offer();
+	return (godot_error)(((WebRTCPeerConnectionNative *)user)->_create_offer());
 }
 
 godot_error create_answer_wp(void *user) {
@@ -75,21 +81,21 @@ godot_error create_answer_wp(void *user) {
 }
 
 godot_error set_remote_description_wp(void *user, const char *type, const char *sdp) {
-	return ((WebRTCPeerConnectionNative *)user)->set_remote_description(type, sdp);
+	return (godot_error)(((WebRTCPeerConnectionNative *)user)->_set_remote_description(type, sdp));
 }
 
 godot_error set_local_description_wp(void *user, const char *type, const char *sdp) {
-	return ((WebRTCPeerConnectionNative *)user)->set_local_description(type, sdp);
+	return (godot_error)(((WebRTCPeerConnectionNative *)user)->_set_local_description(type, sdp));
 }
 
 godot_error add_ice_candidate_wp(void *user, const char *sdpMidName, int sdpMlineIndexName, const char *sdpName) {
-	return ((WebRTCPeerConnectionNative *)user)->add_ice_candidate(sdpMidName, sdpMlineIndexName, sdpName);
+	return (godot_error)(((WebRTCPeerConnectionNative *)user)->_add_ice_candidate(sdpMidName, sdpMlineIndexName, sdpName));
 }
 
 godot_error poll_wp(void *user) {
-	return ((WebRTCPeerConnectionNative *)user)->poll();
+	return (godot_error)((WebRTCPeerConnectionNative *)user)->_poll();
 }
 
 void close_wp(void *user) {
-	((WebRTCPeerConnectionNative *)user)->close();
+	((WebRTCPeerConnectionNative *)user)->_close();
 }

@@ -50,6 +50,8 @@ godot_error add_ice_candidate_wp(void *, const char *, int, const char *);
 godot_error poll_wp(void *);
 void close_wp(void *);
 
+namespace godot {
+
 class WebRTCPeerConnectionNative : public godot::WebRTCPeerConnectionGDNative {
 	GODOT_CLASS(WebRTCPeerConnectionNative, godot::WebRTCPeerConnectionGDNative);
 
@@ -79,18 +81,20 @@ public:
 	void _init();
 	void register_interface(const godot_net_webrtc_peer_connection *interface);
 
-	virtual ConnectionState get_connection_state() const = 0;
+	virtual int64_t _get_connection_state() const = 0;
 
-	virtual godot_error initialize(const godot_dictionary *p_config) = 0;
-	virtual godot_object *create_data_channel(const char *p_channel, const godot_dictionary *p_channel_config) = 0;
-	virtual godot_error create_offer() = 0;
-	virtual godot_error set_remote_description(const char *type, const char *sdp) = 0;
-	virtual godot_error set_local_description(const char *type, const char *sdp) = 0;
-	virtual godot_error add_ice_candidate(const char *sdpMidName, int sdpMlineIndexName, const char *sdpName) = 0;
-	virtual godot_error poll() = 0;
-	virtual void close() = 0;
+	virtual int64_t _initialize(const godot::Dictionary &p_config) = 0;
+	virtual godot::Object *_create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) = 0;
+	virtual int64_t _create_offer() = 0;
+	virtual int64_t _set_remote_description(const godot::String &type, const godot::String &sdp) = 0;
+	virtual int64_t _set_local_description(const godot::String &type, const godot::String &sdp) = 0;
+	virtual int64_t _add_ice_candidate(const godot::String &sdpMidName, int64_t sdpMlineIndexName, const godot::String &sdpName) = 0;
+	virtual int64_t _poll() = 0;
+	virtual void _close() = 0;
 
 	~WebRTCPeerConnectionNative();
 };
+
+}; // namespace godot
 
 #endif // WEBRTC_PEER_NATIVE

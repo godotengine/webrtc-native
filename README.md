@@ -7,15 +7,10 @@
 
 ### Compiling
 
-Clone this repository with the following command to checkout both [godot-cpp](https://github.com/godotengine/godot-cpp) and [godot-headers](https://github.com/godotengine/godot-headers) dependencies.
+Clone this repository with the following command to checkout all the dependencies: [godot-cpp](https://github.com/godotengine/godot-cpp), [openssl](https://www.openssl.org/) and [libdatachannel](https://github.com/paullouisageneau/libdatachannel) (and sub-dependencies).
 
 ```
 $ git clone --recurse-submodules https://github.com/godotengine/webrtc-native.git
-```
-
-Note that if you wish to use a specific branch, add the -b option to the clone command:
-```
-$ git clone --recurse-submodules -b 3.2 https://github.com/godotengine/webrtc-native.git
 ```
 
 If you already checked out the branch use the following commands to update the dependencies:
@@ -24,48 +19,32 @@ If you already checked out the branch use the following commands to update the d
 $ git submodule update --init --recursive
 ```
 
-Right now our directory structure should look like this:
-```
-webrtc-native/
-├─bin/
-├─godot-cpp/
-| └─godot-headers/
-├─src/
-└─webrtc/
-```
+### Compiling the extension.
 
-### Compiling the cpp bindings library
-First, we need to compile our cpp bindings library:
-```
-$ cd godot-cpp
-$ scons platform=<your platform> generate_bindings=yes
-$ cd ..
-```
-
-> Replace `<your platform>` with either `windows`, `linux` or `osx`.
-
-> Include `use_llvm=yes` for using clang++
-
-> Include `target=runtime` to build a runtime build (windows only at the moment)
-
-> Include `target=release` or `target=debug` for release or debug build.
-
-> The resulting library will be created in `godot-cpp/bin/`, take note of its name as it will be different depending on platform.
-
-### Building WebRTC
-
-Building WebRTC is quite a complex task, involves huge downloads and long build times, and produces multiple output libraries that needs to bundled together.
-
-To make things easier, a set of [GitHub Actions](https://docs.github.com/en/actions) are used to generate the library for this plugin, [available in this repository](https://github.com/godotengine/webrtc-actions).
-
-Alternatively, [**download the latest pre-compiled libraries**](https://github.com/godotengine/webrtc-actions/releases).
-
-Extract content of `include` into `webrtc/include` and content of `bin` into `webrtc/<your platform>`
-
-### Compiling the plugin.
+To build the GDExtension version of the plugin (Godot 4.0) run the following command from the `webrtc-native` folder:
 
 ```
-$ scons platform=<your platform> target=<your target>
+$ scons platform=<your platform>
 ```
 
-The generated library and associated `tres` will be placed in `bin/webrtc/` or `bin/webrtc_debug/` according to the desired target. You simply need to copy that folder to the root folder of your project.
+This will build all the required dependencies into a single shared library.
+
+To build the GDNative version of the plugin (Godot 3.x) run the following command instead:
+
+```
+$ scons platform=<your platform> godot_version=3
+```
+
+> Replace `<your platform>` with either `windows`, `linux`, `osx`, `android`, or `ios`.
+
+> Include `target=release` or `target=debug` for release or debug build (default is `debug`).
+
+The resulting library and associated `tres` or `gdextension` will be created in `bin/[extension|gdnative]/webrtc[_debug]` depending on the `target` and `godot_version`.
+
+You simply need to copy that folder to the root folder of your project. Note that you will have to build the library for all the desired export platforms.
+
+### License
+
+The `webrtc-native` plugin is licensed under the MIT license (see [LICENSE](https://github.com/godotengine/webrtc-native/blob/master/LICENSE)), while `libdatachannel` and one of its dependencies (`libjuice`) are licensed under LGPLv2.1 or later, see [libdatachannel LICENSE](https://github.com/paullouisageneau/libdatachannel/blob/master/LICENSE) and [libjuice LICENSE](https://github.com/paullouisageneau/libjuice/blob/master/LICENSE).
+
+Make sure you understand and comply with the LGPLv2.1 license when redistributing this plugin.

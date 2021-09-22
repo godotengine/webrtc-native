@@ -31,6 +31,8 @@
 #include "WebRTCDataChannelNative.hpp"
 #include "net/WebRTCPeerConnectionNative.hpp"
 
+using namespace godot;
+
 void WebRTCDataChannelNative::register_interface(const godot_net_webrtc_data_channel *p_interface) {
 	ERR_FAIL_COND(!WebRTCPeerConnectionNative::_net_api);
 	WebRTCPeerConnectionNative::_net_api->godot_net_bind_webrtc_data_channel(_owner, p_interface);
@@ -54,73 +56,73 @@ WebRTCDataChannelNative::~WebRTCDataChannelNative() {
  * and you could use void *user for any kind of state struct pointer you have.
  */
 godot_error get_packet_wdc(void *user, const uint8_t **r_buffer, int *r_len) {
-	return ((WebRTCDataChannelNative *)user)->get_packet(r_buffer, r_len);
+	return (godot_error)(((WebRTCDataChannelNative *)user)->_get_packet(r_buffer, r_len));
 }
 
 godot_error put_packet_wdc(void *user, const uint8_t *p_buffer, int p_len) {
-	return ((WebRTCDataChannelNative *)user)->put_packet(p_buffer, p_len);
+	return (godot_error)(((WebRTCDataChannelNative *)user)->_put_packet(p_buffer, p_len));
 }
 
 godot_int get_available_packet_count_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_available_packet_count();
+	return ((WebRTCDataChannelNative *)user)->_get_available_packet_count();
 }
 
 godot_int get_max_packet_size_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_max_packet_size();
+	return ((WebRTCDataChannelNative *)user)->_get_max_packet_size();
 }
 
 void set_write_mode_wdc(void *user, godot_int write_mode) {
-	((WebRTCDataChannelNative *)user)->set_write_mode(write_mode);
+	((WebRTCDataChannelNative *)user)->_set_write_mode(write_mode);
 }
 
 godot_int get_write_mode_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_write_mode();
+	return ((WebRTCDataChannelNative *)user)->_get_write_mode();
 }
 
 bool was_string_packet_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->was_string_packet();
+	return ((WebRTCDataChannelNative *)user)->_was_string_packet();
 }
 
 godot_int get_ready_state_wdc(const void *user) {
-	return (godot_int)(((WebRTCDataChannelNative *)user)->get_ready_state());
+	return (godot_int)(((WebRTCDataChannelNative *)user)->_get_ready_state());
 }
 
 const char *get_label_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_label();
+	return ((WebRTCDataChannelNative *)user)->_get_label().utf8().get_data();
 }
 
 bool is_ordered_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->is_ordered();
+	return ((WebRTCDataChannelNative *)user)->_is_ordered();
 }
 
 int get_id_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_id();
+	return ((WebRTCDataChannelNative *)user)->_get_id();
 }
 
 int get_max_packet_life_time_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_max_packet_life_time();
+	return ((WebRTCDataChannelNative *)user)->_get_max_packet_life_time();
 }
 
 int get_max_retransmits_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_max_retransmits();
+	return ((WebRTCDataChannelNative *)user)->_get_max_retransmits();
 }
 
 const char *get_protocol_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_protocol();
+	return ((WebRTCDataChannelNative *)user)->_get_protocol().utf8().get_data();
 }
 
 bool is_negotiated_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->is_negotiated();
+	return ((WebRTCDataChannelNative *)user)->_is_negotiated();
 }
 
 int get_buffered_amount_wdc(const void *user) {
-	return ((WebRTCDataChannelNative *)user)->get_buffered_amount();
+	return ((WebRTCDataChannelNative *)user)->_get_buffered_amount();
 }
 
 godot_error poll_wdc(void *user) {
-	return ((WebRTCDataChannelNative *)user)->poll();
+	return (godot_error)(((WebRTCDataChannelNative *)user)->_poll());
 }
 
 void close_wdc(void *user) {
-	((WebRTCDataChannelNative *)user)->close();
+	((WebRTCDataChannelNative *)user)->_close();
 }
