@@ -1,3 +1,12 @@
+[submodule "godot-cpp-3.x"]
+	path = godot-cpp-3.x
+	url = https://github.com/godotengine/godot-cpp.git
 [submodule "godot-cpp"]
 	path = godot-cpp
-	url = https://github.com/GodotNativeTools/godot-cpp
+	url = https://github.com/godotengine/godot-cpp.git
+[submodule "libdatachannel"]
+	path = deps/libdatachannel
+	url = https://github.com/paullouisageneau/libdatachannel.git
+[submodule "openssl"]
+	path = deps/openssl
+	url = https://github.com/openssl/openssl.git

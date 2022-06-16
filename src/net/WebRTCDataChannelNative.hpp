@@ -69,6 +69,8 @@ typedef struct {
 }
 #endif
 
+namespace godot {
+
 class WebRTCDataChannelNative : public godot::WebRTCDataChannelGDNative {
 	GODOT_CLASS(WebRTCDataChannelNative, godot::WebRTCDataChannelGDNative);
 
@@ -110,30 +112,32 @@ public:
 	void _init();
 	void register_interface(const godot_net_webrtc_data_channel *interface);
 
-	virtual void set_write_mode(godot_int mode) = 0;
-	virtual godot_int get_write_mode() const = 0;
-	virtual bool was_string_packet() const = 0;
+	virtual void _set_write_mode(int64_t mode) = 0;
+	virtual int64_t _get_write_mode() const = 0;
+	virtual bool _was_string_packet() const = 0;
 
-	virtual ChannelState get_ready_state() const = 0;
-	virtual const char *get_label() const = 0;
-	virtual bool is_ordered() const = 0;
-	virtual int get_id() const = 0;
-	virtual int get_max_packet_life_time() const = 0;
-	virtual int get_max_retransmits() const = 0;
-	virtual const char *get_protocol() const = 0;
-	virtual bool is_negotiated() const = 0;
-	virtual int get_buffered_amount() const = 0;
+	virtual int64_t _get_ready_state() const = 0;
+	virtual godot::String _get_label() const = 0;
+	virtual bool _is_ordered() const = 0;
+	virtual int64_t _get_id() const = 0;
+	virtual int64_t _get_max_packet_life_time() const = 0;
+	virtual int64_t _get_max_retransmits() const = 0;
+	virtual godot::String _get_protocol() const = 0;
+	virtual bool _is_negotiated() const = 0;
+	virtual int64_t _get_buffered_amount() const = 0;
 
-	virtual godot_error poll() = 0;
-	virtual void close() = 0;
+	virtual int64_t _poll() = 0;
+	virtual void _close() = 0;
 
 	/* PacketPeer */
-	virtual godot_error get_packet(const uint8_t **r_buffer, int *r_len) = 0;
-	virtual godot_error put_packet(const uint8_t *p_buffer, int p_len) = 0;
-	virtual godot_int get_available_packet_count() const = 0;
-	virtual godot_int get_max_packet_size() const = 0;
+	virtual int64_t _get_packet(const uint8_t **r_buffer, int32_t *r_len) = 0;
+	virtual int64_t _put_packet(const uint8_t *p_buffer, int64_t p_len) = 0;
+	virtual int64_t _get_available_packet_count() const = 0;
+	virtual int64_t _get_max_packet_size() const = 0;
 
 	~WebRTCDataChannelNative();
 };
+
+}; // namespace godot
 
 #endif // WEBRTC_DATA_CHANNEL_NATIVE
