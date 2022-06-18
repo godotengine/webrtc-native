@@ -37,6 +37,12 @@
 #include "WebRTCLibDataChannel.hpp"
 #include "WebRTCLibPeerConnection.hpp"
 
+#ifdef _WIN32
+// See upstream godot-cpp GH-771.
+#undef GDN_EXPORT
+#define GDN_EXPORT __declspec(dllexport)
+#endif
+
 using namespace godot;
 using namespace godot_webrtc;
 

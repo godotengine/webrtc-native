@@ -34,6 +34,12 @@
 #include <gdnative_api_struct.gen.h>
 #include <net/godot_net.h>
 
+#ifdef _WIN32
+// See upstream godot GH-62173.
+#undef GDN_EXPORT
+#define GDN_EXPORT __declspec(dllexport)
+#endif
+
 /* Singleton */
 static bool _singleton = false;
 static const godot_object *_singleton_lib = NULL;
