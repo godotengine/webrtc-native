@@ -63,6 +63,9 @@ def ssl_action(target, source, env):
         "--prefix=%s" % install_dir,
         "--openssldir=%s" % install_dir,
     ]
+    if env["target"] == "debug":
+        args.append("-d")
+
     if env["platform"] != "windows":
         args.append("no-shared")  # Windows "app" doesn't like static-only builds.
     if env["platform"] == "linux":
@@ -160,6 +163,7 @@ def rtc_action(target, source, env):
         "-DOPENSSL_INCLUDE_DIR=%s" % get_ssl_include_dir(env),
         "-DOPENSSL_SSL_LIBRARY=%s/libssl.a" % get_ssl_build_dir(env),
         "-DOPENSSL_CRYPTO_LIBRARY=%s/libcrypto.a" % get_ssl_build_dir(env),
+        "-DCMAKE_BUILD_TYPE=%s" % ("Release" if env["target"] == "release" else "Debug"),
     ]
     if env["platform"] == "android":
         abi = {
