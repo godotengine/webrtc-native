@@ -67,6 +67,10 @@ else:
     })
     env = env.Clone()
 
+# Patch mingw SHLIBSUFFIX.
+if env["platform"] == "windows" and env["use_mingw"]:
+    env["SHLIBSUFFIX"] = ".dll"
+
 opts.Update(env)
 
 target = env["target"]
