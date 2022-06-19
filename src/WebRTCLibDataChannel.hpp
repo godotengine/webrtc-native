@@ -61,7 +61,7 @@ private:
 	QueuedPacket current_packet;
 	std::shared_ptr<rtc::DataChannel> channel = nullptr;
 
-	WriteMode write_mode = WRITE_MODE_TEXT;
+	WriteMode write_mode = WRITE_MODE_BINARY;
 	ChannelState channel_state = STATE_CONNECTING;
 	bool negotiated = false;
 
