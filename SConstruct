@@ -60,12 +60,8 @@ if env["godot_version"] == "3":
         }[env["android_arch"]]
         env["arch_suffix"] = env["arch"]
 else:
-    env = SConscript("godot-cpp/SConstruct")
-    replace_flags(env["CCFLAGS"], {
-        "-mios-simulator-version-min=10.0": "-mios-simulator-version-min=11.0",
-        "-miphoneos-version-min=10.0": "-miphoneos-version-min=11.0",
-    })
-    env = env.Clone()
+    ARGUMENTS["ios_min_version"] = "11.0"
+    env = SConscript("godot-cpp/SConstruct").Clone()
 
 # Patch mingw SHLIBSUFFIX.
 if env["platform"] == "windows" and env["use_mingw"]:
