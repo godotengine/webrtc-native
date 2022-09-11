@@ -73,6 +73,8 @@ public:
 	void _init();
 
 	ConnectionState _get_connection_state() const override;
+	GatheringState _get_gathering_state() const override;
+	SignalingState _get_signaling_state() const override;
 
 	godot::Error _initialize(const godot::Dictionary &p_config) override;
 	godot::Object *_create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) override;

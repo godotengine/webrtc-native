@@ -130,6 +130,42 @@ WebRTCPeerConnection::ConnectionState WebRTCLibPeerConnection::_get_connection_s
 	}
 }
 
+WebRTCLibPeerConnection::GatheringState WebRTCLibPeerConnection::_get_gathering_state() const {
+	ERR_FAIL_COND_V(peer_connection == nullptr, GATHERING_STATE_NEW);
+
+	rtc::PeerConnection::GatheringState state = peer_connection->gatheringState();
+	switch (state) {
+		case rtc::PeerConnection::GatheringState::New:
+			return GATHERING_STATE_NEW;
+		case rtc::PeerConnection::GatheringState::InProgress:
+			return GATHERING_STATE_GATHERING;
+		case rtc::PeerConnection::GatheringState::Complete:
+			return GATHERING_STATE_COMPLETE;
+		default:
+			return GATHERING_STATE_NEW;
+	}
+}
+
+WebRTCLibPeerConnection::SignalingState WebRTCLibPeerConnection::_get_signaling_state() const {
+	ERR_FAIL_COND_V(peer_connection == nullptr, SIGNALING_STATE_CLOSED);
+
+	rtc::PeerConnection::SignalingState state = peer_connection->signalingState();
+	switch (state) {
+		case rtc::PeerConnection::SignalingState::Stable:
+			return SIGNALING_STATE_STABLE;
+		case rtc::PeerConnection::SignalingState::HaveLocalOffer:
+			return SIGNALING_STATE_HAVE_LOCAL_OFFER;
+		case rtc::PeerConnection::SignalingState::HaveRemoteOffer:
+			return SIGNALING_STATE_HAVE_REMOTE_OFFER;
+		case rtc::PeerConnection::SignalingState::HaveLocalPranswer:
+			return SIGNALING_STATE_HAVE_LOCAL_PRANSWER;
+		case rtc::PeerConnection::SignalingState::HaveRemotePranswer:
+			return SIGNALING_STATE_HAVE_REMOTE_PRANSWER;
+		default:
+			return SIGNALING_STATE_CLOSED;
+	}
+}
+
 Error WebRTCLibPeerConnection::_initialize(const Dictionary &p_config) {
 	rtc::Configuration config = {};
 	if (p_config.has("iceServers") && p_config["iceServers"].get_type() == Variant::ARRAY) {
