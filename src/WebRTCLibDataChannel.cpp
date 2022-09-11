@@ -33,10 +33,10 @@
 #ifdef GDNATIVE_WEBRTC
 #include "GDNativeLibrary.hpp"
 #include "NativeScript.hpp"
-#define ERR_UNAVAILABLE GODOT_ERR_UNAVAILABLE
-#define FAILED GODOT_FAILED
-#define ERR_INVALID_PARAMETER GODOT_ERR_INVALID_PARAMETER
-#define OK GODOT_OK
+#define ERR_UNAVAILABLE Error::ERR_UNAVAILABLE
+#define FAILED Error::FAILED
+#define ERR_INVALID_PARAMETER Error::ERR_INVALID_PARAMETER
+#define OK Error::OK
 #endif
 
 #include <stdio.h>
@@ -108,12 +108,12 @@ void WebRTCLibDataChannel::queue_packet(const uint8_t *data, uint32_t size, bool
 	mutex->unlock();
 }
 
-void WebRTCLibDataChannel::_set_write_mode(int64_t p_mode) {
+void WebRTCLibDataChannel::_set_write_mode(WriteMode p_mode) {
 	ERR_FAIL_COND(p_mode != WRITE_MODE_TEXT && p_mode != WRITE_MODE_BINARY);
-	write_mode = (WriteMode)p_mode;
+	write_mode = p_mode;
 }
 
-int64_t WebRTCLibDataChannel::_get_write_mode() const {
+WebRTCDataChannel::WriteMode WebRTCLibDataChannel::_get_write_mode() const {
 	return write_mode;
 }
 
@@ -121,7 +121,7 @@ bool WebRTCLibDataChannel::_was_string_packet() const {
 	return current_packet.second;
 }
 
-int64_t WebRTCLibDataChannel::_get_ready_state() const {
+WebRTCDataChannel::ChannelState WebRTCLibDataChannel::_get_ready_state() const {
 	ERR_FAIL_COND_V(!channel, STATE_CLOSED);
 	return channel_state;
 }
@@ -166,7 +166,7 @@ int64_t WebRTCLibDataChannel::_get_buffered_amount() const {
 	return channel->bufferedAmount();
 }
 
-int64_t WebRTCLibDataChannel::_poll() {
+Error WebRTCLibDataChannel::_poll() {
 	return OK;
 }
 
@@ -177,7 +177,7 @@ void WebRTCLibDataChannel::_close() try {
 } catch (...) {
 }
 
-int64_t WebRTCLibDataChannel::_get_packet(const uint8_t **r_buffer, int32_t *r_len) {
+Error WebRTCLibDataChannel::_get_packet(const uint8_t **r_buffer, int32_t *r_len) {
 	ERR_FAIL_COND_V(packet_queue.empty(), ERR_UNAVAILABLE);
 
 	mutex->lock();
@@ -191,10 +191,10 @@ int64_t WebRTCLibDataChannel::_get_packet(const uint8_t **r_buffer, int32_t *r_l
 
 	mutex->unlock();
 
-	return 0;
+	return OK;
 }
 
-int64_t WebRTCLibDataChannel::_put_packet(const uint8_t *p_buffer, int64_t p_len) try {
+Error WebRTCLibDataChannel::_put_packet(const uint8_t *p_buffer, int64_t p_len) try {
 	ERR_FAIL_COND_V(!channel, FAILED);
 	ERR_FAIL_COND_V(channel->isClosed(), FAILED);
 	if (write_mode == WRITE_MODE_TEXT) {

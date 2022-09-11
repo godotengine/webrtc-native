@@ -72,7 +72,7 @@ godot_int get_max_packet_size_wdc(const void *user) {
 }
 
 void set_write_mode_wdc(void *user, godot_int write_mode) {
-	((WebRTCDataChannelNative *)user)->_set_write_mode(write_mode);
+	((WebRTCDataChannelNative *)user)->_set_write_mode((godot::WebRTCDataChannel::WriteMode)write_mode);
 }
 
 godot_int get_write_mode_wdc(const void *user) {

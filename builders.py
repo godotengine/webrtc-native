@@ -88,7 +88,7 @@ def ssl_action(target, source, env):
         ssl_env.PrependENVPath("PATH", os.path.dirname(env["CC"]))
         ssl_env["ENV"]["ANDROID_NDK_ROOT"] = os.environ.get("ANDROID_NDK_ROOT", "")
 
-    elif env["platform"] == "osx":
+    elif env["platform"] == "macos":
         if env["arch"] == "x86_64":
             args.extend(["darwin64-x86_64"])
         elif env["arch"] == "arm64":
@@ -191,7 +191,7 @@ def rtc_action(target, source, env):
                 "-DCMAKE_C_FLAGS=-m64",
                 "-DCMAKE_CXX_FLAGS=-m64"
             ])
-    elif env["platform"] == "osx":
+    elif env["platform"] == "macos":
         if env["macos_deployment_target"] != "default":
             args.extend(["-DCMAKE_OSX_DEPLOYMENT_TARGET=%s" % env["macos_deployment_target"]])
         if env["arch"] == "x86_64":

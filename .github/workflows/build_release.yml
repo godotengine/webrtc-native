@@ -38,18 +38,8 @@ jobs:
         include:
           # Android
           - platform: android
-            arch: 'x86_32'
-            gdnative_flags: 'android_arch=x86'
-            sconsflags: ''
-            os: 'ubuntu-20.04'
-          - platform: android
             arch: 'x86_64'
             gdnative_flags: 'android_arch=x86_64'
-            sconsflags: ''
-            os: 'ubuntu-20.04'
-          - platform: android
-            arch: 'arm32'
-            gdnative_flags: 'android_arch=armv7'
             sconsflags: ''
             os: 'ubuntu-20.04'
           - platform: android
@@ -84,12 +74,12 @@ jobs:
             os: 'ubuntu-20.04'
 
           # macOS
-          - platform: osx
+          - platform: macos
             arch: 'x86_64'
             gdnative_flags: 'macos_arch=x86_64 bits=64'
             sconsflags: ''
             os: 'macos-11'
-          - platform: osx
+          - platform: macos
             gdnative_flags: 'macos_arch=arm64 bits=64'
             arch: 'arm64'
             sconsflags: ''

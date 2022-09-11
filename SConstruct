@@ -23,6 +23,9 @@ opts.Add(EnumVariable("godot_version", "The Godot target version", "4", ["3", "4
 opts.Update(env)
 
 if env["godot_version"] == "3":
+    if "platform" in ARGUMENTS and ARGUMENTS["platform"] == "macos":
+        ARGUMENTS["platform"] = "osx"  # compatibility with old osx name
+
     env = SConscript("godot-cpp-3.x/SConstruct")
 
     # Patch base env
@@ -40,6 +43,10 @@ if env["godot_version"] == "3":
 
     if env["platform"] == "windows" and env["use_mingw"]:
         env.Append(LINKFLAGS=["-static-libgcc"])
+
+    if env["platform"] == "osx":
+        env["platform"] = "macos"  # compatibility with old osx name
+        ARGUMENTS["platform"] = "macos"
 
     # Normalize suffix
     if env["platform"] in ["windows", "linux"]:
