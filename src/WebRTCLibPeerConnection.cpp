@@ -35,24 +35,10 @@ using namespace godot;
 using namespace godot_webrtc;
 
 #ifdef GDNATIVE_WEBRTC
-struct CastableError {
-	godot::Error err_enum;
-	int64_t err_int;
-
-	operator int64_t() { return err_int; }
-	operator godot::Error() { return err_enum; }
-	CastableError(godot::Error p_enum, int64_t p_int) {
-		err_enum = p_enum;
-		err_int = p_int;
-	}
-};
-#define MKERR(m_err) CastableError(godot::Error::m_err, GODOT_##m_err)
-#define OK MKERR(OK)
-#define FAILED MKERR(FAILED)
-#define ERR_UNCONFIGURED MKERR(ERR_UNCONFIGURED)
-#define ERR_UNAVAILABLE MKERR(ERR_UNAVAILABLE)
-#define ERR_INVALID_PARAMETER MKERR(ERR_INVALID_PARAMETER)
-#define ERR_BUG MKERR(ERR_BUG)
+#define OK Error::OK
+#define FAILED Error::FAILED
+#define ERR_UNCONFIGURED Error::ERR_UNCONFIGURED
+#define ERR_INVALID_PARAMETER Error::ERR_INVALID_PARAMETER
 #endif
 
 void WebRTCLibPeerConnection::initialize_signaling() {
@@ -124,7 +110,7 @@ Error WebRTCLibPeerConnection::_parse_channel_config(rtc::DataChannelInit &r_con
 	return OK;
 }
 
-int64_t WebRTCLibPeerConnection::_get_connection_state() const {
+WebRTCPeerConnection::ConnectionState WebRTCLibPeerConnection::_get_connection_state() const {
 	ERR_FAIL_COND_V(peer_connection == nullptr, STATE_CLOSED);
 
 	rtc::PeerConnection::State state = peer_connection->state();
@@ -144,7 +130,7 @@ int64_t WebRTCLibPeerConnection::_get_connection_state() const {
 	}
 }
 
-int64_t WebRTCLibPeerConnection::_initialize(const Dictionary &p_config) {
+Error WebRTCLibPeerConnection::_initialize(const Dictionary &p_config) {
 	rtc::Configuration config = {};
 	if (p_config.has("iceServers") && p_config["iceServers"].get_type() == Variant::ARRAY) {
 		Array servers = p_config["iceServers"];
@@ -155,7 +141,7 @@ int64_t WebRTCLibPeerConnection::_initialize(const Dictionary &p_config) {
 			ERR_FAIL_COND_V(err != OK, FAILED);
 		}
 	}
-	return (int64_t)_create_pc(config);
+	return _create_pc(config);
 }
 
 Object *WebRTCLibPeerConnection::_create_data_channel(const String &p_channel, const Dictionary &p_channel_config) try {
@@ -178,7 +164,7 @@ Object *WebRTCLibPeerConnection::_create_data_channel(const String &p_channel, c
 	ERR_FAIL_V(nullptr);
 }
 
-int64_t WebRTCLibPeerConnection::_create_offer() try {
+Error WebRTCLibPeerConnection::_create_offer() try {
 	ERR_FAIL_COND_V(!peer_connection, ERR_UNCONFIGURED);
 	ERR_FAIL_COND_V(_get_connection_state() != STATE_NEW, FAILED);
 	peer_connection->setLocalDescription(rtc::Description::Type::Offer);
@@ -188,7 +174,7 @@ int64_t WebRTCLibPeerConnection::_create_offer() try {
 	ERR_FAIL_V(FAILED);
 }
 
-int64_t WebRTCLibPeerConnection::_set_remote_description(const String &p_type, const String &p_sdp) try {
+Error WebRTCLibPeerConnection::_set_remote_description(const String &p_type, const String &p_sdp) try {
 	ERR_FAIL_COND_V(!peer_connection, ERR_UNCONFIGURED);
 	std::string sdp(p_sdp.utf8().get_data());
 	std::string type(p_type.utf8().get_data());
@@ -204,7 +190,7 @@ int64_t WebRTCLibPeerConnection::_set_remote_description(const String &p_type, c
 	ERR_FAIL_V(FAILED);
 }
 
-int64_t WebRTCLibPeerConnection::_set_local_description(const String &p_type, const String &p_sdp) {
+Error WebRTCLibPeerConnection::_set_local_description(const String &p_type, const String &p_sdp) {
 	ERR_FAIL_COND_V(!peer_connection, ERR_UNCONFIGURED);
 	// XXX Library quirk. It doesn't seem possible to create offers/answers without setting the local description.
 	// Ignore this call for now to avoid crash (it's already set automatically!).
@@ -212,7 +198,7 @@ int64_t WebRTCLibPeerConnection::_set_local_description(const String &p_type, co
 	return OK;
 }
 
-int64_t WebRTCLibPeerConnection::_add_ice_candidate(const String &sdpMidName, int64_t sdpMlineIndexName, const String &sdpName) try {
+Error WebRTCLibPeerConnection::_add_ice_candidate(const String &sdpMidName, int64_t sdpMlineIndexName, const String &sdpName) try {
 	ERR_FAIL_COND_V(!peer_connection, ERR_UNCONFIGURED);
 	rtc::Candidate candidate(sdpName.utf8().get_data(), sdpMidName.utf8().get_data());
 	peer_connection->addRemoteCandidate(candidate);
@@ -222,7 +208,7 @@ int64_t WebRTCLibPeerConnection::_add_ice_candidate(const String &sdpMidName, in
 	ERR_FAIL_V(FAILED);
 }
 
-int64_t WebRTCLibPeerConnection::_poll() {
+Error WebRTCLibPeerConnection::_poll() {
 	ERR_FAIL_COND_V(!peer_connection, ERR_UNCONFIGURED);
 
 	while (!signal_queue.empty()) {

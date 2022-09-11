@@ -40,6 +40,7 @@
 #define GDCLASS(arg1, arg2) GODOT_CLASS(arg1, arg2)
 #endif
 #else
+#include <godot_cpp/classes/global_constants_binds.hpp>
 #include <godot_cpp/classes/web_rtc_data_channel_extension.hpp>
 #endif
 
@@ -75,20 +76,20 @@ public:
 	static WebRTCLibDataChannel *new_data_channel(std::shared_ptr<rtc::DataChannel> p_channel, bool p_negotiated);
 
 	/* PacketPeer */
-	virtual int64_t _get_packet(const uint8_t **r_buffer, int32_t *r_len) override;
-	virtual int64_t _put_packet(const uint8_t *p_buffer, int64_t p_len) override;
+	virtual godot::Error _get_packet(const uint8_t **r_buffer, int32_t *r_len) override;
+	virtual godot::Error _put_packet(const uint8_t *p_buffer, int64_t p_len) override;
 	virtual int64_t _get_available_packet_count() const override;
 	virtual int64_t _get_max_packet_size() const override;
 
 	/* WebRTCDataChannel */
-	int64_t _poll() override;
+	godot::Error _poll() override;
 	void _close() override;
 
-	void _set_write_mode(int64_t p_mode) override;
-	int64_t _get_write_mode() const override;
+	void _set_write_mode(WriteMode p_mode) override;
+	WriteMode _get_write_mode() const override;
 	bool _was_string_packet() const override;
 
-	int64_t _get_ready_state() const override;
+	ChannelState _get_ready_state() const override;
 	godot::String _get_label() const override;
 	bool _is_ordered() const override;
 	int64_t _get_id() const override;

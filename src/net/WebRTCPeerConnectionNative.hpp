@@ -81,15 +81,15 @@ public:
 	void _init();
 	void register_interface(const godot_net_webrtc_peer_connection *interface);
 
-	virtual int64_t _get_connection_state() const = 0;
+	virtual ConnectionState _get_connection_state() const = 0;
 
-	virtual int64_t _initialize(const godot::Dictionary &p_config) = 0;
+	virtual godot::Error _initialize(const godot::Dictionary &p_config) = 0;
 	virtual godot::Object *_create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) = 0;
-	virtual int64_t _create_offer() = 0;
-	virtual int64_t _set_remote_description(const godot::String &type, const godot::String &sdp) = 0;
-	virtual int64_t _set_local_description(const godot::String &type, const godot::String &sdp) = 0;
-	virtual int64_t _add_ice_candidate(const godot::String &sdpMidName, int64_t sdpMlineIndexName, const godot::String &sdpName) = 0;
-	virtual int64_t _poll() = 0;
+	virtual godot::Error _create_offer() = 0;
+	virtual godot::Error _set_remote_description(const godot::String &type, const godot::String &sdp) = 0;
+	virtual godot::Error _set_local_description(const godot::String &type, const godot::String &sdp) = 0;
+	virtual godot::Error _add_ice_candidate(const godot::String &sdpMidName, int64_t sdpMlineIndexName, const godot::String &sdpName) = 0;
+	virtual godot::Error _poll() = 0;
 	virtual void _close() = 0;
 
 	~WebRTCPeerConnectionNative();

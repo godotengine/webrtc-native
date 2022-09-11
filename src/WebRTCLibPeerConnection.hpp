@@ -40,6 +40,7 @@
 #define GDCLASS(arg1, arg2) GODOT_CLASS(arg1, arg2)
 #endif
 #else
+#include <godot_cpp/classes/global_constants_binds.hpp>
 #include <godot_cpp/classes/web_rtc_peer_connection_extension.hpp>
 #endif
 
@@ -71,15 +72,15 @@ public:
 
 	void _init();
 
-	int64_t _get_connection_state() const override;
+	ConnectionState _get_connection_state() const override;
 
-	int64_t _initialize(const godot::Dictionary &p_config) override;
+	godot::Error _initialize(const godot::Dictionary &p_config) override;
 	godot::Object *_create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) override;
-	int64_t _create_offer() override;
-	int64_t _set_remote_description(const godot::String &type, const godot::String &sdp) override;
-	int64_t _set_local_description(const godot::String &type, const godot::String &sdp) override;
-	int64_t _add_ice_candidate(const godot::String &sdpMidName, int64_t sdpMlineIndexName, const godot::String &sdpName) override;
-	int64_t _poll() override;
+	godot::Error _create_offer() override;
+	godot::Error _set_remote_description(const godot::String &type, const godot::String &sdp) override;
+	godot::Error _set_local_description(const godot::String &type, const godot::String &sdp) override;
+	godot::Error _add_ice_candidate(const godot::String &sdpMidName, int64_t sdpMlineIndexName, const godot::String &sdpName) override;
+	godot::Error _poll() override;
 	void _close() override;
 
 	WebRTCLibPeerConnection();

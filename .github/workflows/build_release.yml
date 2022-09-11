@@ -84,12 +84,12 @@ jobs:
             os: 'ubuntu-20.04'
 
           # macOS
-          - platform: osx
+          - platform: macos
             arch: 'x86_64'
             gdnative_flags: 'macos_arch=x86_64 bits=64'
             sconsflags: ''
             os: 'macos-11'
-          - platform: osx
+          - platform: macos
             gdnative_flags: 'macos_arch=arm64 bits=64'
             arch: 'arm64'
             sconsflags: ''

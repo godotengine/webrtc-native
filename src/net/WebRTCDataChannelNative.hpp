@@ -112,11 +112,11 @@ public:
 	void _init();
 	void register_interface(const godot_net_webrtc_data_channel *interface);
 
-	virtual void _set_write_mode(int64_t mode) = 0;
-	virtual int64_t _get_write_mode() const = 0;
+	virtual void _set_write_mode(WriteMode mode) = 0;
+	virtual WriteMode _get_write_mode() const = 0;
 	virtual bool _was_string_packet() const = 0;
 
-	virtual int64_t _get_ready_state() const = 0;
+	virtual ChannelState _get_ready_state() const = 0;
 	virtual godot::String _get_label() const = 0;
 	virtual bool _is_ordered() const = 0;
 	virtual int64_t _get_id() const = 0;
@@ -126,12 +126,12 @@ public:
 	virtual bool _is_negotiated() const = 0;
 	virtual int64_t _get_buffered_amount() const = 0;
 
-	virtual int64_t _poll() = 0;
+	virtual godot::Error _poll() = 0;
 	virtual void _close() = 0;
 
 	/* PacketPeer */
-	virtual int64_t _get_packet(const uint8_t **r_buffer, int32_t *r_len) = 0;
-	virtual int64_t _put_packet(const uint8_t *p_buffer, int64_t p_len) = 0;
+	virtual godot::Error _get_packet(const uint8_t **r_buffer, int32_t *r_len) = 0;
+	virtual godot::Error _put_packet(const uint8_t *p_buffer, int64_t p_len) = 0;
 	virtual int64_t _get_available_packet_count() const = 0;
 	virtual int64_t _get_max_packet_size() const = 0;
 
