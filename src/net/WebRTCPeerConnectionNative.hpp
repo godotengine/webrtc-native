@@ -75,6 +75,21 @@ protected:
 	};
 
 public:
+	enum GatheringState {
+		GATHERING_STATE_NEW,
+		GATHERING_STATE_GATHERING,
+		GATHERING_STATE_COMPLETE,
+	};
+
+	enum SignalingState {
+		SIGNALING_STATE_STABLE,
+		SIGNALING_STATE_HAVE_LOCAL_OFFER,
+		SIGNALING_STATE_HAVE_REMOTE_OFFER,
+		SIGNALING_STATE_HAVE_LOCAL_PRANSWER,
+		SIGNALING_STATE_HAVE_REMOTE_PRANSWER,
+		SIGNALING_STATE_CLOSED,
+	};
+
 	static void _register_methods();
 	static const godot_gdnative_ext_net_3_2_api_struct *_net_api;
 
@@ -82,6 +97,8 @@ public:
 	void register_interface(const godot_net_webrtc_peer_connection *interface);
 
 	virtual ConnectionState _get_connection_state() const = 0;
+	virtual GatheringState _get_gathering_state() const = 0;
+	virtual SignalingState _get_signaling_state() const = 0;
 
 	virtual godot::Error _initialize(const godot::Dictionary &p_config) = 0;
 	virtual godot::Object *_create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) = 0;
