@@ -28,6 +28,11 @@ if env["godot_version"] == "3":
 
     env = SConscript("godot-cpp-3.x/SConstruct")
 
+    scons_cache_path = os.environ.get("SCONS_CACHE")
+    if scons_cache_path is not None:
+        CacheDir(scons_cache_path)
+        Decider("MD5")
+
     # Patch base env
     replace_flags(env["CCFLAGS"], {
         "-mios-simulator-version-min=10.0": "-mios-simulator-version-min=11.0",
