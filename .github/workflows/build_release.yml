@@ -59,7 +59,7 @@ jobs:
             arch: 'x86_64'
             gdnative_flags: 'ios_arch=x86_64'
             sconsflags: 'ios_simulator=true'
-            os: 'macos-latest'
+            os: 'macos-11'
             cache-name: ios-x86_64-simulator
           - platform: ios
             arch: 'arm64'
@@ -162,21 +162,17 @@ jobs:
           scons --version
           cmake --version
 
-      - name: Compile Extension - debug - ${{ matrix.platform }} - ${{ matrix.arch }}
+      - name: Compile Extension - template_debug - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=debug generate_bindings=yes
+          scons target=template_debug generate_bindings=yes
 
-      - name: Compile GDNative - debug - ${{ matrix.platform }} - ${{ matrix.arch }}
+      - name: Compile Extension - template_release - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=debug generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
-
-      - name: Compile Extension - release - ${{ matrix.platform }} - ${{ matrix.arch }}
-        run: |
-          scons target=release
+          scons target=template_release
 
       - name: Compile GDNative - release ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=release ${{ matrix.gdnative_flags }} godot_version=3
+          scons target=release generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
 
       - uses: actions/upload-artifact@v3
         with:
@@ -208,28 +204,15 @@ jobs:
           cp deps/libdatachannel/deps/plog/LICENSE artifacts/LICENSE.plog
 
       - name: Package artifacts for release
+        env:
+          DESTINATION: "release"
         run: |
           mkdir release
-          cd release
 
-          ls -R
+          VERSION="extension" TYPE="webrtc" ./misc/scripts/package_release.sh
+          VERSION="gdnative" TYPE="webrtc" ./misc/scripts/package_release.sh
 
-          for version in extension gdnative
-          do
-            for name in webrtc webrtc_debug
-            do
-              destdir="${version}/${name}"
-              mkdir -p ${destdir}/lib
-              find ../artifacts -wholename "*/${destdir}/lib/*" | xargs cp -t ${destdir}/lib/
-              find ../artifacts -wholename "*/${destdir}/${name}.tres" -or -wholename "*/${destdir}/${name}.gdextension" | head -n 1 | xargs cp -t ${destdir}/
-              find ../artifacts -wholename "*/LICENSE*" | xargs cp -t ${destdir}/
-              cd ${version}
-              zip -r ../godot-${version}-${name}.zip ${name}
-              cd ..
-            done
-          done
-
-          ls -R
+          ls -R release
 
       - uses: actions/upload-artifact@v3
         with:
