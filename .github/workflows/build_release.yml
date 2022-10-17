@@ -1,13 +1,17 @@
 name: 🔧 Build -> Package 📦
 on: [push, pull_request]
 
+env:
+  # Only used for the cache key. Increment version to force clean build.
+  GODOT_BASE_BRANCH: master
+
 jobs:
   static-checks:
     name: 📊 Static Checks (clang-format, black format, file format)
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
@@ -42,24 +46,27 @@ jobs:
             gdnative_flags: 'android_arch=x86_64'
             sconsflags: ''
             os: 'ubuntu-20.04'
+            cache-name: android-x86_64
           - platform: android
             arch: 'arm64'
             gdnative_flags: 'android_arch=arm64v8'
             sconsflags: ''
             os: 'ubuntu-20.04'
+            cache-name: android-arm64
 
           # iOS
           - platform: ios
             arch: 'x86_64'
             gdnative_flags: 'ios_arch=x86_64'
             sconsflags: 'ios_simulator=true'
-            os: 'macos-latest'
+            os: 'macos-11'
+            cache-name: ios-x86_64-simulator
           - platform: ios
             arch: 'arm64'
             gdnative_flags: 'ios_arch=arm64'
             sconsflags: ''
             os: 'macos-11'
-
+            cache-name: ios-arm64
 
           # Linux
           - platform: linux
@@ -67,11 +74,13 @@ jobs:
             gdnative_flags: 'bits=32'
             sconsflags: ''
             os: 'ubuntu-20.04'
+            cache-name: linux-x86_32
           - platform: linux
             arch: 'x86_64'
             gdnative_flags: 'bits=64'
             sconsflags: ''
             os: 'ubuntu-20.04'
+            cache-name: linux-x86_64
 
           # macOS
           - platform: macos
@@ -79,11 +88,13 @@ jobs:
             gdnative_flags: 'macos_arch=x86_64 bits=64'
             sconsflags: ''
             os: 'macos-11'
+            cache-name: macos-x86_64
           - platform: macos
             gdnative_flags: 'macos_arch=arm64 bits=64'
             arch: 'arm64'
             sconsflags: ''
             os: 'macos-11'
+            cache-name: macos-arm64
 
           # Windows
           - platform: windows
@@ -92,14 +103,17 @@ jobs:
             sconsflags: 'use_mingw=yes'
             os: 'ubuntu-20.04'
             msvc_arch: amd64_x86
+            cache-name: win-x86_32
           - platform: windows
             arch: 'x86_64'
             gdnative_flags: 'bits=64'
             sconsflags: 'use_mingw=yes'
             os: 'ubuntu-20.04'
             msvc_arch: amd64
+            cache-name: win-x86_64
 
     env:
+      SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
       SCONSFLAGS: ${{ matrix.sconsflags }} platform=${{ matrix.platform }} arch=${{ matrix.arch }} --jobs=2
 
     defaults:
@@ -107,9 +121,15 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
+
+      - name: Setup Godot build cache
+        uses: ./godot-cpp/.github/actions/godot-cache
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
 
       - name: Install Windows build dependencies
         if: ${{ matrix.platform == 'windows' }}
@@ -129,7 +149,7 @@ jobs:
           sudo apt-get install build-essential gcc-multilib g++-multilib
 
       - name: Set up Python 3.x
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
           architecture: 'x64'
@@ -142,21 +162,17 @@ jobs:
           scons --version
           cmake --version
 
-      - name: Compile Extension - debug - ${{ matrix.platform }} - ${{ matrix.arch }}
+      - name: Compile Extension - template_debug - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=debug generate_bindings=yes
+          scons target=template_debug generate_bindings=yes
 
-      - name: Compile GDNative - debug - ${{ matrix.platform }} - ${{ matrix.arch }}
+      - name: Compile Extension - template_release - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=debug generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
-
-      - name: Compile Extension - release - ${{ matrix.platform }} - ${{ matrix.arch }}
-        run: |
-          scons target=release
+          scons target=template_release
 
       - name: Compile GDNative - release ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=release ${{ matrix.gdnative_flags }} godot_version=3
+          scons target=release generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
 
       - uses: actions/upload-artifact@v3
         with:
@@ -168,7 +184,7 @@ jobs:
     needs: build
     runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
 
@@ -188,28 +204,15 @@ jobs:
           cp deps/libdatachannel/deps/plog/LICENSE artifacts/LICENSE.plog
 
       - name: Package artifacts for release
+        env:
+          DESTINATION: "release"
         run: |
           mkdir release
-          cd release
 
-          ls -R
+          VERSION="extension" TYPE="webrtc" ./misc/scripts/package_release.sh
+          VERSION="gdnative" TYPE="webrtc" ./misc/scripts/package_release.sh
 
-          for version in extension gdnative
-          do
-            for name in webrtc webrtc_debug
-            do
-              destdir="${version}/${name}"
-              mkdir -p ${destdir}/lib
-              find ../artifacts -wholename "*/${destdir}/lib/*" | xargs cp -t ${destdir}/lib/
-              find ../artifacts -wholename "*/${destdir}/${name}.tres" -or -wholename "*/${destdir}/${name}.gdextension" | head -n 1 | xargs cp -t ${destdir}/
-              find ../artifacts -wholename "*/LICENSE*" | xargs cp -t ${destdir}/
-              cd ${version}
-              zip -r ../godot-${version}-${name}.zip ${name}
-              cd ..
-            done
-          done
-
-          ls -R
+          ls -R release
 
       - uses: actions/upload-artifact@v3
         with:

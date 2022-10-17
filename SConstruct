@@ -26,6 +26,11 @@ if env["godot_version"] == "3":
     if "platform" in ARGUMENTS and ARGUMENTS["platform"] == "macos":
         ARGUMENTS["platform"] = "osx"  # compatibility with old osx name
 
+    scons_cache_path = os.environ.get("SCONS_CACHE")
+    if scons_cache_path is not None:
+        CacheDir(scons_cache_path)
+        Decider("MD5")
+
     env = SConscript("godot-cpp-3.x/SConstruct")
 
     # Patch base env
@@ -52,7 +57,7 @@ if env["godot_version"] == "3":
     if env["platform"] in ["windows", "linux"]:
         env["arch"] = "x86_32" if env["bits"] == "32" else "x86_64"
         env["arch_suffix"] = env["arch"]
-    elif env["platform"] == "osx":
+    elif env["platform"] == "macos":
         env["arch"] = env["macos_arch"]
         env["arch_suffix"] = env["arch"]
     elif env["platform"] == "ios":
@@ -66,6 +71,10 @@ if env["godot_version"] == "3":
             "x86_64": "x86_64",
         }[env["android_arch"]]
         env["arch_suffix"] = env["arch"]
+
+    target_compat = "template_" + env["target"]
+    env["suffix"] = ".{}.{}.{}".format(env["platform"], target_compat, env["arch_suffix"])
+    env["debug_symbols"] = False
 else:
     ARGUMENTS["ios_min_version"] = "11.0"
     env = SConscript("godot-cpp/SConstruct").Clone()
@@ -77,7 +86,10 @@ if env["platform"] == "windows" and env["use_mingw"]:
 opts.Update(env)
 
 target = env["target"]
-result_path = os.path.join("bin", "gdnative" if env["godot_version"] == "3" else "extension", "webrtc" if env["target"] == "release" else "webrtc_debug")
+if env["godot_version"] == "3":
+    result_path = os.path.join("bin", "gdnative", "webrtc" if env["target"] == "release" else "webrtc_debug")
+else:
+    result_path = os.path.join("bin", "extension", "webrtc")
 
 # Dependencies
 deps_source_dir = "deps"
@@ -88,6 +100,7 @@ env.Append(BUILDERS={
 
 # SSL
 ssl = env.BuildOpenSSL(env.Dir(builders.get_ssl_build_dir(env)), env.Dir(builders.get_ssl_source_dir(env)))
+env.Depends(ssl, env.File("builders.py"))
 
 env.Prepend(CPPPATH=[builders.get_ssl_include_dir(env)])
 env.Prepend(LIBPATH=[builders.get_ssl_build_dir(env)])
@@ -95,6 +108,7 @@ env.Append(LIBS=[ssl])
 
 # RTC
 rtc = env.BuildLibDataChannel(env.Dir(builders.get_rtc_build_dir(env)), [env.Dir(builders.get_rtc_source_dir(env))] + ssl)
+env.Depends(rtc, env.File("builders.py"))
 
 env.Append(LIBPATH=[builders.get_rtc_build_dir(env)])
 env.Append(CPPPATH=[builders.get_rtc_include_dir(env)])
@@ -119,7 +133,7 @@ else:
 env.Depends(sources, [ssl, rtc])
 
 # Make the shared library
-result_name = "webrtc_native.{}.{}.{}{}".format(env["platform"], env["target"], env["arch_suffix"], env["SHLIBSUFFIX"])
+result_name = "webrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
 env.Depends(sources, ssl)
 
 if env["platform"] == "windows" and env["use_mingw"]:
@@ -129,12 +143,13 @@ library = env.SharedLibrary(target=os.path.join(result_path, "lib", result_name)
 Default(library)
 
 # GDNativeLibrary
-gdnlib = "webrtc"
-if target != "release":
-    gdnlib += "_debug"
-ext = ".tres" if env["godot_version"] == "3" else ".gdextension"
-extfile = env.Substfile(os.path.join(result_path, gdnlib + ext), "misc/webrtc" + ext, SUBST_DICT={
-    "{GDNATIVE_PATH}": gdnlib,
-    "{TARGET}": env["target"],
-})
+if env["godot_version"] == "3":
+    gdnlib = "webrtc" if target != "debug" else "webrtc_debug"
+    ext = ".tres"
+    extfile = env.Substfile(os.path.join(result_path, gdnlib + ext), "misc/webrtc" + ext, SUBST_DICT={
+        "{GDNATIVE_PATH}": gdnlib,
+        "{TARGET}": "template_" + env["target"],
+    })
+else:
+    extfile = env.InstallAs(os.path.join(result_path, "webrtc.gdextension"), "misc/webrtc.gdextension")
 Default(extfile)

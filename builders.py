@@ -11,7 +11,7 @@ def get_deps_dir(env):
 
 
 def get_deps_build_dir(env):
-    return get_deps_dir(env) + "/build/{}.{}.{}.dir".format(env["platform"], env["target"], env["arch_suffix"])
+    return get_deps_dir(env) + "/build/build{}.{}.dir".format(env["suffix"], "RelWithDebInfo" if env["debug_symbols"] else "Release")
 
 
 def get_rtc_source_dir(env):
@@ -63,7 +63,7 @@ def ssl_action(target, source, env):
         "--prefix=%s" % install_dir,
         "--openssldir=%s" % install_dir,
     ]
-    if env["target"] == "debug":
+    if env["debug_symbols"]:
         args.append("-d")
 
     if env["platform"] != "windows":
@@ -163,7 +163,7 @@ def rtc_action(target, source, env):
         "-DOPENSSL_INCLUDE_DIR=%s" % get_ssl_include_dir(env),
         "-DOPENSSL_SSL_LIBRARY=%s/libssl.a" % get_ssl_build_dir(env),
         "-DOPENSSL_CRYPTO_LIBRARY=%s/libcrypto.a" % get_ssl_build_dir(env),
-        "-DCMAKE_BUILD_TYPE=%s" % ("Release" if env["target"] == "release" else "Debug"),
+        "-DCMAKE_BUILD_TYPE=%s" % ("RelWithDebInfo" if env["debug_symbols"] else "Release"),
     ]
     if env["platform"] == "android":
         abi = {

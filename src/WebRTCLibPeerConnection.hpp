@@ -40,6 +40,8 @@
 #define GDCLASS(arg1, arg2) GODOT_CLASS(arg1, arg2)
 #endif
 #else
+#include <godot_cpp/core/binder_common.hpp>
+
 #include <godot_cpp/classes/global_constants_binds.hpp>
 #include <godot_cpp/classes/web_rtc_peer_connection_extension.hpp>
 #endif
