@@ -54,7 +54,7 @@ def ssl_action(target, source, env):
     build_dir = get_ssl_build_dir(env)
     source_dir = source[0].abspath
 
-    ssl_env = Environment()
+    ssl_env = Environment(ENV = os.environ)
     install_dir = get_ssl_install_dir(env)
     args = [
         "no-ssl3",
@@ -231,7 +231,7 @@ def rtc_action(target, source, env):
 
     args.append(source_dir)
     jobs = env.GetOption("num_jobs")
-    rtc_env = Environment()
+    rtc_env = Environment(ENV = os.environ)
     rtc_env.Execute([
             "cmake " + " ".join(args),
             "cmake --build %s -t datachannel-static -j%s" % (build_dir, jobs),
