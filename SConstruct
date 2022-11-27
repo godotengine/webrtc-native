@@ -79,6 +79,15 @@ else:
     ARGUMENTS["ios_min_version"] = "11.0"
     env = SConscript("godot-cpp/SConstruct").Clone()
 
+# Should probably go to upstream godot-cpp.
+# We let SCons build its default ENV as it includes OS-specific things which we don't
+# want to have to pull in manually.
+# Then we prepend PATH to make it take precedence, while preserving SCons' own entries.
+env.PrependENVPath("PATH", os.getenv("PATH"))
+env.PrependENVPath("PKG_CONFIG_PATH", os.getenv("PKG_CONFIG_PATH"))
+if "TERM" in os.environ: # Used for colored output.
+    env["ENV"]["TERM"] = os.environ["TERM"]
+
 # Patch mingw SHLIBSUFFIX.
 if env["platform"] == "windows" and env["use_mingw"]:
     env["SHLIBSUFFIX"] = ".dll"
@@ -100,19 +109,20 @@ env.Append(BUILDERS={
 
 # SSL
 ssl = env.BuildOpenSSL(env.Dir(builders.get_ssl_build_dir(env)), env.Dir(builders.get_ssl_source_dir(env)))
-env.Depends(ssl, env.File("builders.py"))
+env.Depends(ssl, [env.File("builders.py"), env.File(builders.get_ssl_source_dir(env) + "/VERSION.dat")])
+env.NoCache(ssl) # Needs refactoring to properly cache generated headers.
 
 env.Prepend(CPPPATH=[builders.get_ssl_include_dir(env)])
 env.Prepend(LIBPATH=[builders.get_ssl_build_dir(env)])
-env.Append(LIBS=[ssl])
+env.Append(LIBS=[builders.get_ssl_libs(env)])
 
 # RTC
 rtc = env.BuildLibDataChannel(env.Dir(builders.get_rtc_build_dir(env)), [env.Dir(builders.get_rtc_source_dir(env))] + ssl)
-env.Depends(rtc, env.File("builders.py"))
+env.Depends(rtc, [env.File("builders.py"), env.File(builders.get_rtc_source_dir(env) + "/CMakeLists.txt")])
 
 env.Append(LIBPATH=[builders.get_rtc_build_dir(env)])
 env.Append(CPPPATH=[builders.get_rtc_include_dir(env)])
-env.Prepend(LIBS=[rtc])
+env.Prepend(LIBS=[builders.get_rtc_libs(env)])
 
 # Our includes and sources
 env.Append(CPPPATH=["src/"])
@@ -130,7 +140,7 @@ else:
     sources.append("src/init_gdnative.cpp")
     add_sources(sources, "src/net/", "cpp")
 
-env.Depends(sources, [ssl, rtc])
+env.Depends(sources, [builders.get_ssl_libs(env), builders.get_rtc_libs(env)])
 
 # Make the shared library
 result_name = "webrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
