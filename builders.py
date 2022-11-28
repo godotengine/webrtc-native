@@ -1,4 +1,5 @@
 import os
+from SCons.Defaults import Mkdir
 from SCons.Script import Environment
 
 
@@ -26,6 +27,17 @@ def get_rtc_include_dir(env):
     return get_rtc_source_dir(env) + "/include"
 
 
+def get_rtc_libs(env):
+    bdir = get_rtc_build_dir(env)
+    libs = [
+        "libdatachannel-static.a",
+        "deps/libjuice/libjuice-static.a",
+        "deps/libsrtp/libsrtp2.a",
+        "deps/usrsctp/usrsctplib/libusrsctp.a"
+    ]
+    return [env.File(bdir + "/" + lib) for lib in libs]
+
+
 def get_ssl_source_dir(env):
     return get_deps_dir(env) + "/openssl"
 
@@ -42,19 +54,20 @@ def get_ssl_include_dir(env):
     return get_ssl_install_dir(env) + "/include"
 
 
+def get_ssl_libs(env):
+    bdir = get_ssl_build_dir(env)
+    return [env.File(bdir + "/" + lib) for lib in ["libssl.a", "libcrypto.a"]]
+
+
 def ssl_emitter(target, source, env):
-    build_dir = get_ssl_build_dir(env)
-    libs = ["libssl.a", "libcrypto.a"]
-    install_dir = get_ssl_install_dir(env)
-    ssl_include = os.path.join(source[0].abspath, "include")
-    return [env.File(build_dir + "/" + l) for l in libs], source
+    return get_ssl_libs(env), source
 
 
 def ssl_action(target, source, env):
     build_dir = get_ssl_build_dir(env)
     source_dir = source[0].abspath
 
-    ssl_env = Environment()
+    ssl_env = env.Clone()
     install_dir = get_ssl_install_dir(env)
     args = [
         "no-ssl3",
@@ -126,8 +139,8 @@ def ssl_action(target, source, env):
 
     jobs = env.GetOption("num_jobs")
     ssl_env.Execute([
-            "mkdir -p " + build_dir, # TODO python?
-            ("cd %s && %s/Configure " % (build_dir, source_dir)) + " ".join(args),
+            Mkdir(build_dir),
+            "cd %s && perl %s/Configure %s" % (build_dir, source_dir, " ".join(['"%s"' % a for a in args])),
             "make -C %s -j%s" % (build_dir, jobs),
             "make -C %s install_sw install_ssldirs -j%s" % (build_dir, jobs),
         ]
@@ -136,28 +149,20 @@ def ssl_action(target, source, env):
 
 
 def rtc_emitter(target, source, env):
-    build_dir = get_rtc_build_dir(env)
-    libs = ["libdatachannel-static.a", "libjuice-static.a", "libsrtp2.a", "libusrsctp.a"]
-    lib_paths = [
-        build_dir,
-        os.path.join(build_dir, "deps/libjuice"),
-        os.path.join(build_dir, "deps/libsrtp"),
-        os.path.join(build_dir, "deps/usrsctp/usrsctplib"),
-    ]
-    return [env.File(lib_paths[i] + "/" + libs[i]) for i in range(len(libs))], source
+    return get_rtc_libs(env), source
 
 
 def rtc_action(target, source, env):
     build_dir = get_rtc_build_dir(env)
     source_dir = source[0].abspath
     args = [
+        "cmake",
         "-B",
         build_dir,
         "-DUSE_NICE=0",
         "-DNO_WEBSOCKET=1",
         #"-DNO_MEDIA=1", # Windows builds fail without it.
         "-DNO_EXAMPLES=1",
-        "-DNO_WEBSOCKET=1",
         "-DNO_TESTS=1",
         "-DOPENSSL_USE_STATIC_LIBS=1",
         "-DOPENSSL_INCLUDE_DIR=%s" % get_ssl_include_dir(env),
@@ -215,7 +220,8 @@ def rtc_action(target, source, env):
         if env["arch"] == "x86_32":
             if env["use_mingw"]:
                 args.extend([
-                    "-G 'Unix Makefiles'",
+                    "-G",
+                    "Unix Makefiles",
                     "-DCMAKE_C_COMPILER=i686-w64-mingw32-gcc",
                     "-DCMAKE_CXX_COMPILER=i686-w64-mingw32-g++",
                     "-DCMAKE_SYSTEM_NAME=Windows",
@@ -223,7 +229,8 @@ def rtc_action(target, source, env):
         else:
             if env["use_mingw"]:
                 args.extend([
-                    "-G 'Unix Makefiles'",
+                    "-G",
+                    "Unix Makefiles",
                     "-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc",
                     "-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++",
                     "-DCMAKE_SYSTEM_NAME=Windows"
@@ -231,10 +238,10 @@ def rtc_action(target, source, env):
 
     args.append(source_dir)
     jobs = env.GetOption("num_jobs")
-    rtc_env = Environment()
+    rtc_env = env.Clone()
     rtc_env.Execute([
-            "cmake " + " ".join(args),
-            "cmake --build %s -t datachannel-static -j%s" % (build_dir, jobs),
+            " ".join(['"%s"' % a for a in args]),
+            "cmake --build %s -t datachannel-static -j%s" % (build_dir, jobs)
         ]
     )
     return None
