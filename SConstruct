@@ -17,7 +17,7 @@ def replace_flags(flags, replaces):
             flags[flags.index(k)] = v
 
 
-env = Environment(ENV = os.environ)
+env = Environment()
 opts = Variables(["customs.py"], ARGUMENTS)
 opts.Add(EnumVariable("godot_version", "The Godot target version", "4", ["3", "4"]))
 opts.Update(env)

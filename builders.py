@@ -54,7 +54,7 @@ def ssl_action(target, source, env):
     build_dir = get_ssl_build_dir(env)
     source_dir = source[0].abspath
 
-    ssl_env = Environment(ENV = os.environ)
+    ssl_env = Environment()
     install_dir = get_ssl_install_dir(env)
     args = [
         "no-ssl3",
