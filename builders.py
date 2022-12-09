@@ -8,11 +8,11 @@ def get_android_api(env):
 
 
 def get_deps_dir(env):
-    return env.Dir("#deps").abspath
+    return env.Dir("#thirdparty").abspath
 
 
 def get_deps_build_dir(env):
-    return get_deps_dir(env) + "/build/build{}.{}.dir".format(env["suffix"], "RelWithDebInfo" if env["debug_symbols"] else "Release")
+    return env.Dir("#bin/thirdparty").abspath + "/{}.{}.dir".format(env["suffix"][1:], "RelWithDebInfo" if env["debug_symbols"] else "Release")
 
 
 def get_rtc_source_dir(env):

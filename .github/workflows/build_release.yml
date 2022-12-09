@@ -177,7 +177,9 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ github.job }}-${{ matrix.platform }}-${{ matrix.arch }}
-          path: bin/*
+          path: |
+            bin/
+            !bin/thirdparty/
 
   package:
     name: 📦 Package
@@ -195,13 +197,13 @@ jobs:
       - name: Bundle licenses.
         run: |
           cp LICENSE artifacts/LICENSE.webrtc-native
-          cp deps/libdatachannel/LICENSE artifacts/LICENSE.libdatachannel
-          cp deps/openssl/LICENSE.txt artifacts/LICENSE.openssl
-          cp deps/libdatachannel/deps/libjuice/LICENSE artifacts/LICENSE.libjuice
-          cp deps/libdatachannel/deps/usrsctp/LICENSE.md artifacts/LICENSE.usrsctp
-          cp deps/libdatachannel/deps/libsrtp/LICENSE artifacts/LICENSE.libsrtp
-          cp deps/libdatachannel/deps/json/LICENSE.MIT artifacts/LICENSE.json
-          cp deps/libdatachannel/deps/plog/LICENSE artifacts/LICENSE.plog
+          cp thirdparty/libdatachannel/LICENSE artifacts/LICENSE.libdatachannel
+          cp thirdparty/openssl/LICENSE.txt artifacts/LICENSE.openssl
+          cp thirdparty/libdatachannel/deps/libjuice/LICENSE artifacts/LICENSE.libjuice
+          cp thirdparty/libdatachannel/deps/usrsctp/LICENSE.md artifacts/LICENSE.usrsctp
+          cp thirdparty/libdatachannel/deps/libsrtp/LICENSE artifacts/LICENSE.libsrtp
+          cp thirdparty/libdatachannel/deps/json/LICENSE.MIT artifacts/LICENSE.json
+          cp thirdparty/libdatachannel/deps/plog/LICENSE artifacts/LICENSE.plog
 
       - name: Package artifacts for release
         env:
