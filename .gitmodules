@@ -5,8 +5,8 @@
 	path = godot-cpp
 	url = https://github.com/godotengine/godot-cpp.git
 [submodule "libdatachannel"]
-	path = deps/libdatachannel
+	path = thirdparty/libdatachannel
 	url = https://github.com/paullouisageneau/libdatachannel.git
 [submodule "openssl"]
-	path = deps/openssl
+	path = thirdparty/openssl
 	url = https://github.com/openssl/openssl.git

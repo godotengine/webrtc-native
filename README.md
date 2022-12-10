@@ -45,6 +45,4 @@ You simply need to copy that folder to the root folder of your project. Note tha
 
 ### License
 
-The `webrtc-native` plugin is licensed under the MIT license (see [LICENSE](https://github.com/godotengine/webrtc-native/blob/master/LICENSE)), while `libdatachannel` and one of its dependencies (`libjuice`) are licensed under LGPLv2.1 or later, see [libdatachannel LICENSE](https://github.com/paullouisageneau/libdatachannel/blob/master/LICENSE) and [libjuice LICENSE](https://github.com/paullouisageneau/libjuice/blob/master/LICENSE).
-
-Make sure you understand and comply with the LGPLv2.1 license when redistributing this plugin.
+The `webrtc-native` plugin is licensed under the MIT license (see [LICENSE](https://github.com/godotengine/webrtc-native/blob/master/LICENSE)), while `libdatachannel` and its dependencies are licensed under other permissive open source licences. Please see [`thirdparty/README.md`](thirdparty/README.md) for more informations.

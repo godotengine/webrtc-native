@@ -101,7 +101,6 @@ else:
     result_path = os.path.join("bin", "extension", "webrtc")
 
 # Dependencies
-deps_source_dir = "deps"
 env.Append(BUILDERS={
     "BuildOpenSSL": env.Builder(action=builders.ssl_action, emitter=builders.ssl_emitter),
     "BuildLibDataChannel": env.Builder(action=builders.rtc_action, emitter=builders.rtc_emitter),
@@ -126,6 +125,7 @@ env.Prepend(LIBS=[builders.get_rtc_libs(env)])
 
 # Our includes and sources
 env.Append(CPPPATH=["src/"])
+env.Append(CPPDEFINES=["RTC_STATIC"])
 sources = []
 sources.append(
     [
