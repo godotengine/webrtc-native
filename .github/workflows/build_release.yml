@@ -164,7 +164,7 @@ jobs:
 
       - name: Compile Extension - template_debug - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=template_debug generate_bindings=yes
+          scons target=template_debug
 
       - name: Compile Extension - template_release - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
