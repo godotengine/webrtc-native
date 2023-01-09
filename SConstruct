@@ -2,8 +2,6 @@
 
 import os, sys, platform, json, subprocess
 
-import builders
-
 
 def add_sources(sources, dirpath, extension):
     for f in os.listdir(dirpath):
@@ -101,27 +99,12 @@ else:
     result_path = os.path.join("bin", "extension", "webrtc")
 
 # Dependencies
-env.Append(BUILDERS={
-    "BuildOpenSSL": env.Builder(action=builders.ssl_action, emitter=builders.ssl_emitter),
-    "BuildLibDataChannel": env.Builder(action=builders.rtc_action, emitter=builders.rtc_emitter),
-})
+for tool in ["cmake", "common", "ssl", "rtc"]:
+    env.Tool(tool, toolpath=["tools"])
 
-# SSL
-ssl = env.BuildOpenSSL(env.Dir(builders.get_ssl_build_dir(env)), env.Dir(builders.get_ssl_source_dir(env)))
-env.Depends(ssl, [env.File("builders.py"), env.File(builders.get_ssl_source_dir(env) + "/VERSION.dat")])
+ssl = env.BuildOpenSSL()
 env.NoCache(ssl) # Needs refactoring to properly cache generated headers.
-
-env.Prepend(CPPPATH=[builders.get_ssl_include_dir(env)])
-env.Prepend(LIBPATH=[builders.get_ssl_build_dir(env)])
-env.Append(LIBS=[builders.get_ssl_libs(env)])
-
-# RTC
-rtc = env.BuildLibDataChannel(env.Dir(builders.get_rtc_build_dir(env)), [env.Dir(builders.get_rtc_source_dir(env))] + ssl)
-env.Depends(rtc, [env.File("builders.py"), env.File(builders.get_rtc_source_dir(env) + "/CMakeLists.txt")])
-
-env.Append(LIBPATH=[builders.get_rtc_build_dir(env)])
-env.Append(CPPPATH=[builders.get_rtc_include_dir(env)])
-env.Prepend(LIBS=[builders.get_rtc_libs(env)])
+rtc = env.BuildLibDataChannel()
 
 # Our includes and sources
 env.Append(CPPPATH=["src/"])
@@ -140,15 +123,10 @@ else:
     sources.append("src/init_gdnative.cpp")
     add_sources(sources, "src/net/", "cpp")
 
-env.Depends(sources, [builders.get_ssl_libs(env), builders.get_rtc_libs(env)])
+env.Depends(sources, [ssl, rtc])
 
 # Make the shared library
 result_name = "webrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
-env.Depends(sources, ssl)
-
-if env["platform"] == "windows" and env["use_mingw"]:
-    env.Append(LIBS=["iphlpapi", "ws2_32", "bcrypt"])
-
 library = env.SharedLibrary(target=os.path.join(result_path, "lib", result_name), source=sources)
 Default(library)
 

@@ -5,3 +5,5 @@ bin/*
 .sconsign.dblite
 *.obj
 *.swp
+__pycache__/*
+*.pyc
