@@ -24,11 +24,6 @@ if env["godot_version"] == "3":
     if "platform" in ARGUMENTS and ARGUMENTS["platform"] == "macos":
         ARGUMENTS["platform"] = "osx"  # compatibility with old osx name
 
-    scons_cache_path = os.environ.get("SCONS_CACHE")
-    if scons_cache_path is not None:
-        CacheDir(scons_cache_path)
-        Decider("MD5")
-
     env = SConscript("godot-cpp-3.x/SConstruct")
 
     # Patch base env
