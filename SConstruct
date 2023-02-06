@@ -68,6 +68,14 @@ if env["godot_version"] == "3":
     target_compat = "template_" + env["target"]
     env["suffix"] = ".{}.{}.{}".format(env["platform"], target_compat, env["arch_suffix"])
     env["debug_symbols"] = False
+
+    # Set missing CC for MinGW from upstream build module.
+    if env["platform"] == "windows" and sys.platform != "win32" and sys.platform != "msys":
+        # Cross-compilation using MinGW
+        if env["bits"] == "64":
+            env["CC"] = "x86_64-w64-mingw32-gcc"
+        elif env["bits"] == "32":
+            env["CC"] = "i686-w64-mingw32-gcc"
 else:
     ARGUMENTS["ios_min_version"] = "11.0"
     env = SConscript("godot-cpp/SConstruct").Clone()
