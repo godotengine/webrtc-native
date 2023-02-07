@@ -136,17 +136,17 @@ bool WebRTCLibDataChannel::_is_ordered() const {
 	return channel->reliability().unordered == false;
 }
 
-int64_t WebRTCLibDataChannel::_get_id() const {
+int32_t WebRTCLibDataChannel::_get_id() const {
 	ERR_FAIL_COND_V(!channel, -1);
 	return channel->id().value_or(-1);
 }
 
-int64_t WebRTCLibDataChannel::_get_max_packet_life_time() const {
+int32_t WebRTCLibDataChannel::_get_max_packet_life_time() const {
 	ERR_FAIL_COND_V(!channel, 0);
 	return channel->reliability().type == rtc::Reliability::Type::Timed ? std::get<std::chrono::milliseconds>(channel->reliability().rexmit).count() : -1;
 }
 
-int64_t WebRTCLibDataChannel::_get_max_retransmits() const {
+int32_t WebRTCLibDataChannel::_get_max_retransmits() const {
 	ERR_FAIL_COND_V(!channel, 0);
 	return channel->reliability().type == rtc::Reliability::Type::Rexmit ? std::get<int>(channel->reliability().rexmit) : -1;
 }
@@ -161,7 +161,7 @@ bool WebRTCLibDataChannel::_is_negotiated() const {
 	return negotiated;
 }
 
-int64_t WebRTCLibDataChannel::_get_buffered_amount() const {
+int32_t WebRTCLibDataChannel::_get_buffered_amount() const {
 	ERR_FAIL_COND_V(!channel, 0);
 	return channel->bufferedAmount();
 }
@@ -194,7 +194,7 @@ Error WebRTCLibDataChannel::_get_packet(const uint8_t **r_buffer, int32_t *r_len
 	return OK;
 }
 
-Error WebRTCLibDataChannel::_put_packet(const uint8_t *p_buffer, int64_t p_len) try {
+Error WebRTCLibDataChannel::_put_packet(const uint8_t *p_buffer, int32_t p_len) try {
 	ERR_FAIL_COND_V(!channel, FAILED);
 	ERR_FAIL_COND_V(channel->isClosed(), FAILED);
 	if (write_mode == WRITE_MODE_TEXT) {
@@ -212,11 +212,11 @@ Error WebRTCLibDataChannel::_put_packet(const uint8_t *p_buffer, int64_t p_len) 
 	ERR_FAIL_V(FAILED);
 }
 
-int64_t WebRTCLibDataChannel::_get_available_packet_count() const {
+int32_t WebRTCLibDataChannel::_get_available_packet_count() const {
 	return packet_queue.size();
 }
 
-int64_t WebRTCLibDataChannel::_get_max_packet_size() const {
+int32_t WebRTCLibDataChannel::_get_max_packet_size() const {
 	return 16384; // See RFC-8831 section 6.6: https://datatracker.ietf.org/doc/rfc8831/
 }
 
