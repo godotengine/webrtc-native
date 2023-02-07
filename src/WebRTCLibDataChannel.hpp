@@ -79,9 +79,9 @@ public:
 
 	/* PacketPeer */
 	virtual godot::Error _get_packet(const uint8_t **r_buffer, int32_t *r_len) override;
-	virtual godot::Error _put_packet(const uint8_t *p_buffer, int64_t p_len) override;
-	virtual int64_t _get_available_packet_count() const override;
-	virtual int64_t _get_max_packet_size() const override;
+	virtual godot::Error _put_packet(const uint8_t *p_buffer, int32_t p_len) override;
+	virtual int32_t _get_available_packet_count() const override;
+	virtual int32_t _get_max_packet_size() const override;
 
 	/* WebRTCDataChannel */
 	godot::Error _poll() override;
@@ -94,12 +94,12 @@ public:
 	ChannelState _get_ready_state() const override;
 	godot::String _get_label() const override;
 	bool _is_ordered() const override;
-	int64_t _get_id() const override;
-	int64_t _get_max_packet_life_time() const override;
-	int64_t _get_max_retransmits() const override;
+	int32_t _get_id() const override;
+	int32_t _get_max_packet_life_time() const override;
+	int32_t _get_max_retransmits() const override;
 	godot::String _get_protocol() const override;
 	bool _is_negotiated() const override;
-	int64_t _get_buffered_amount() const override;
+	int32_t _get_buffered_amount() const override;
 
 	WebRTCLibDataChannel();
 	~WebRTCLibDataChannel();

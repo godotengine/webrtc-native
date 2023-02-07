@@ -83,7 +83,11 @@ public:
 	godot::Error _create_offer() override;
 	godot::Error _set_remote_description(const godot::String &type, const godot::String &sdp) override;
 	godot::Error _set_local_description(const godot::String &type, const godot::String &sdp) override;
+#ifdef GDNATIVE_WEBRTC
 	godot::Error _add_ice_candidate(const godot::String &sdpMidName, int64_t sdpMlineIndexName, const godot::String &sdpName) override;
+#else
+	godot::Error _add_ice_candidate(const godot::String &sdpMidName, int32_t sdpMlineIndexName, const godot::String &sdpName) override;
+#endif
 	godot::Error _poll() override;
 	void _close() override;
 
