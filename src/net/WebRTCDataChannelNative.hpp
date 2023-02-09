@@ -119,21 +119,21 @@ public:
 	virtual ChannelState _get_ready_state() const = 0;
 	virtual godot::String _get_label() const = 0;
 	virtual bool _is_ordered() const = 0;
-	virtual int64_t _get_id() const = 0;
-	virtual int64_t _get_max_packet_life_time() const = 0;
-	virtual int64_t _get_max_retransmits() const = 0;
+	virtual int32_t _get_id() const = 0;
+	virtual int32_t _get_max_packet_life_time() const = 0;
+	virtual int32_t _get_max_retransmits() const = 0;
 	virtual godot::String _get_protocol() const = 0;
 	virtual bool _is_negotiated() const = 0;
-	virtual int64_t _get_buffered_amount() const = 0;
+	virtual int32_t _get_buffered_amount() const = 0;
 
 	virtual godot::Error _poll() = 0;
 	virtual void _close() = 0;
 
 	/* PacketPeer */
 	virtual godot::Error _get_packet(const uint8_t **r_buffer, int32_t *r_len) = 0;
-	virtual godot::Error _put_packet(const uint8_t *p_buffer, int64_t p_len) = 0;
-	virtual int64_t _get_available_packet_count() const = 0;
-	virtual int64_t _get_max_packet_size() const = 0;
+	virtual godot::Error _put_packet(const uint8_t *p_buffer, int32_t p_len) = 0;
+	virtual int32_t _get_available_packet_count() const = 0;
+	virtual int32_t _get_max_packet_size() const = 0;
 
 	~WebRTCDataChannelNative();
 };

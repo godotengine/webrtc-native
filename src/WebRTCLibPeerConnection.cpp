@@ -234,7 +234,11 @@ Error WebRTCLibPeerConnection::_set_local_description(const String &p_type, cons
 	return OK;
 }
 
+#ifdef GDNATIVE_WEBRTC
 Error WebRTCLibPeerConnection::_add_ice_candidate(const String &sdpMidName, int64_t sdpMlineIndexName, const String &sdpName) try {
+#else
+Error WebRTCLibPeerConnection::_add_ice_candidate(const String &sdpMidName, int32_t sdpMlineIndexName, const String &sdpName) try {
+#endif
 	ERR_FAIL_COND_V(!peer_connection, ERR_UNCONFIGURED);
 	rtc::Candidate candidate(sdpName.utf8().get_data(), sdpMidName.utf8().get_data());
 	peer_connection->addRemoteCandidate(candidate);
