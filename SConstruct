@@ -1,6 +1,7 @@
 #!python
 
 import os, sys, platform, json, subprocess
+import SCons
 
 
 def add_sources(sources, dirpath, extension):
@@ -101,14 +102,6 @@ if env["godot_version"] == "3":
 else:
     result_path = os.path.join("bin", "extension", "webrtc")
 
-# Dependencies
-for tool in ["cmake", "common", "ssl", "rtc"]:
-    env.Tool(tool, toolpath=["tools"])
-
-ssl = env.BuildOpenSSL()
-env.NoCache(ssl) # Needs refactoring to properly cache generated headers.
-rtc = env.BuildLibDataChannel()
-
 # Our includes and sources
 env.Append(CPPPATH=["src/"])
 env.Append(CPPDEFINES=["RTC_STATIC"])
@@ -126,12 +119,48 @@ else:
     sources.append("src/init_gdnative.cpp")
     add_sources(sources, "src/net/", "cpp")
 
-env.Depends(sources, [ssl, rtc])
+# Since the OpenSSL build system does not support macOS universal binaries, we first need to build the two libraries
+# separately, then we join them together using lipo.
+mac_universal = env["platform"] == "macos" and env["arch"] == "universal"
+build_targets = []
+build_envs = [env]
 
-# Make the shared library
-result_name = "webrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
-library = env.SharedLibrary(target=os.path.join(result_path, "lib", result_name), source=sources)
-Default(library)
+# For macOS universal builds, setup one build environment per architecture.
+if mac_universal:
+    build_envs = []
+    for arch in ["x86_64", "arm64"]:
+        benv = env.Clone()
+        benv["arch"] = arch
+        benv["CCFLAGS"] = SCons.Util.CLVar(str(benv["CCFLAGS"]).replace("-arch x86_64 -arch arm64", "-arch " + arch))
+        benv["LINKFLAGS"] = SCons.Util.CLVar(str(benv["LINKFLAGS"]).replace("-arch x86_64 -arch arm64", "-arch " + arch))
+        benv["suffix"] = benv["suffix"].replace("universal", arch)
+        benv["SHOBJSUFFIX"] = benv["suffix"] + benv["SHOBJSUFFIX"]
+        build_envs.append(benv)
+
+# Build our library and its dependencies.
+for benv in build_envs:
+    # Dependencies
+    for tool in ["cmake", "common", "ssl", "rtc"]:
+        benv.Tool(tool, toolpath=["tools"])
+
+    ssl = benv.BuildOpenSSL()
+    benv.NoCache(ssl) # Needs refactoring to properly cache generated headers.
+    rtc = benv.BuildLibDataChannel()
+
+    benv.Depends(sources, [ssl, rtc])
+
+    # Make the shared library
+    result_name = "webrtc_native{}{}".format(benv["suffix"], benv["SHLIBSUFFIX"])
+    library = benv.SharedLibrary(target=os.path.join(result_path, "lib", result_name), source=sources)
+    build_targets.append(library)
+
+Default(build_targets)
+
+# For macOS universal builds, join the libraries using lipo.
+if mac_universal:
+    result_name = "libwebrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
+    universal_target = env.Command(os.path.join(result_path, "lib", result_name), build_targets, "lipo $SOURCES -output $TARGETS -create")
+    Default(universal_target)
 
 # GDNativeLibrary
 if env["godot_version"] == "3":
@@ -143,4 +172,5 @@ if env["godot_version"] == "3":
     })
 else:
     extfile = env.InstallAs(os.path.join(result_path, "webrtc.gdextension"), "misc/webrtc.gdextension")
+
 Default(extfile)
