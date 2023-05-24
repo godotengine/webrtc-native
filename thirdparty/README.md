@@ -52,7 +52,7 @@ Module location:
 ## openssl
 
 - Upstream: git://git.openssl.org/openssl.git
-- Version: 3.0.7 (19cc035b6c6f2283573d29c7ea7f7d675cf750ce, 2022)
+- Version: 3.0.8 (31157bc0b46e04227b8468d3e6915e4d0332777c, 2023)
 - License: Apache 2.0
 
 Module location:
