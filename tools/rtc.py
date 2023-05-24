@@ -52,6 +52,7 @@ def rtc_cmake_config(env):
                 config["CMAKE_OSX_SYSROOT"] = "iphonesimulator"
     elif env["platform"] == "windows":
         config["CMAKE_SYSTEM_NAME"] = "Windows"
+        config["BUILD_WITH_WARNINGS"] = "0"  # Disables werror in libsrtp.
     return config
 
 
