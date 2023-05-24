@@ -19,7 +19,7 @@ Module location:
 ## libdatachannel
 
 - Upstream: https://github.com/paullouisageneau/libdatachannel
-- Version: 0.18.1 (595f0ebaac3974f17e5a5c63e7e7dc0c5edd163d, 2022)
+- Version: 0.18.4 (4dd6c2117684c3d7d13c0d02b5aee8d4c2b661b0, 2023)
 - License: MPL 2.0
 
 Module location:
@@ -30,7 +30,7 @@ Module location:
 # libjuice
 
 - Upstream: https://github.com/paullouisageneau/libjuice
-- Version: 1.1.0 (0dabc046cd23da6908749e4c6add834ec29a7c49, 2022)
+- Version: 1.2.3 (8c23cc88c6d41e5ccbc44ea0ad3d79b22cf02361, 2023)
 - License: MPL 2.0
 
 Module location:
@@ -41,7 +41,7 @@ Module location:
 ## libsrtp
 
 - Upstream: https://github.com/cisco/libsrtp
-- Version: 2.4.2 (90d05bf8980d16e4ac3f16c19b77e296c4bc207b, 2021)
+- Version: 2.5.0 (a566a9cfcd619e8327784aa7cff4a1276dc1e895, 2023)
 - License: BSD-3-Clause
 
 Module location:
