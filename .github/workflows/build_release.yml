@@ -84,17 +84,11 @@ jobs:
 
           # macOS
           - platform: macos
-            arch: 'x86_64'
-            gdnative_flags: 'macos_arch=x86_64 bits=64'
+            arch: 'universal'
+            gdnative_flags: 'macos_arch=universal bits=64'
             sconsflags: ''
             os: 'macos-11'
-            cache-name: macos-x86_64
-          - platform: macos
-            gdnative_flags: 'macos_arch=arm64 bits=64'
-            arch: 'arm64'
-            sconsflags: ''
-            os: 'macos-11'
-            cache-name: macos-arm64
+            cache-name: macos-universal
 
           # Windows
           - platform: windows
