@@ -21,6 +21,14 @@ opts = Variables(["customs.py"], ARGUMENTS)
 opts.Add(EnumVariable("godot_version", "The Godot target version", "4", ["3", "4"]))
 opts.Update(env)
 
+# Minimum target platform versions.
+if "ios_min_version" not in ARGUMENTS:
+    ARGUMENTS["ios_min_version"] = "11.0"
+if "macos_deployment_target" not in ARGUMENTS:
+    ARGUMENTS["macos_deployment_target"] = "11.0"
+if "android_api_level" not in ARGUMENTS:
+    ARGUMENTS["android_api_level"] = "28"
+
 if env["godot_version"] == "3":
     if "platform" in ARGUMENTS and ARGUMENTS["platform"] == "macos":
         ARGUMENTS["platform"] = "osx"  # compatibility with old osx name
@@ -81,7 +89,6 @@ if env["godot_version"] == "3":
         elif env["bits"] == "32":
             env["CC"] = "i686-w64-mingw32-gcc"
 else:
-    ARGUMENTS["ios_min_version"] = "11.0"
     env = SConscript("godot-cpp/SConstruct").Clone()
 
 # Should probably go to upstream godot-cpp.
