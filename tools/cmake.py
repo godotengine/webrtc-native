@@ -9,6 +9,17 @@ def generate(env):
     env.AddMethod(cmake_configure, "CMakeConfigure")
     env.AddMethod(cmake_build, "CMakeBuild")
     env.AddMethod(cmake_platform_flags, "CMakePlatformFlags")
+    env["CMAKE"] = "cmake"
+    # OSXCross cmake wrapper
+    if env["platform"] == "macos" and os.environ.get("OSXCROSS_ROOT", ""):
+        env["CMAKE"] = (
+            os.environ.get("OSXCROSS_ROOT", "")
+            + "/target/bin/"
+            + env["arch"]
+            + "-apple-"
+            + env["osxcross_sdk"]
+            + "-cmake"
+        )
 
 
 def cmake_configure(env, source, target, opt_args):
@@ -21,12 +32,12 @@ def cmake_configure(env, source, target, opt_args):
     for arg in opt_args:
         args.append(arg)
     args.append(source)
-    return env.Execute("cmake " + " ".join(['"%s"' % a for a in args]))
+    return env.Execute(env["CMAKE"] + " " + " ".join(['"%s"' % a for a in args]))
 
 
 def cmake_build(env, source, target=""):
     jobs = env.GetOption("num_jobs")
-    return env.Execute("cmake --build %s %s -j%s" % (source, "-t %s" % target if target else "", jobs))
+    return env.Execute(env["CMAKE"] + " --build %s %s -j%s" % (source, "-t %s" % target if target else "", jobs))
 
 
 def cmake_platform_flags(env, config=None):

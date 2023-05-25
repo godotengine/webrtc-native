@@ -70,24 +70,18 @@ def ssl_action(target, source, env):
     elif env["platform"] == "windows":
         if env["arch"] == "x86_32":
             if env["use_mingw"]:
-                args.extend(
-                    [
-                        "mingw",
-                        "--cross-compile-prefix=i686-w64-mingw32-",
-                    ]
-                )
+                args.extend(["mingw"])
             else:
                 args.extend(["VC-WIN32"])
         else:
             if env["use_mingw"]:
-                args.extend(
-                    [
-                        "mingw64",
-                        "--cross-compile-prefix=x86_64-w64-mingw32-",
-                    ]
-                )
+                args.extend(["mingw64"])
             else:
                 args.extend(["VC-WIN64A"])
+
+    args.extend(
+        ["CC=" + env["CC"], "CXX=" + env["CXX"], "AR=" + env["AR"], "AS=" + env["AS"], "RANLIB=" + env["RANLIB"]]
+    )
 
     jobs = env.GetOption("num_jobs")
     ssl_env.Execute(

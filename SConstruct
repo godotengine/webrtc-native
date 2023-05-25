@@ -104,6 +104,12 @@ if "TERM" in os.environ:  # Used for colored output.
 if env["platform"] == "windows" and env["use_mingw"]:
     env["SHLIBSUFFIX"] = ".dll"
 
+# Patch OSXCross config.
+if env["platform"] == "macos" and os.environ.get("OSXCROSS_ROOT", ""):
+    env["SHLIBSUFFIX"] = ".dylib"
+    if env["macos_deployment_target"] != "default":
+        env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = env["macos_deployment_target"]
+
 opts.Update(env)
 
 target = env["target"]
