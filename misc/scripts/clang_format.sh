@@ -4,55 +4,50 @@
 # This is the primary script responsible for fixing style violations.
 
 set -uo pipefail
-IFS=$'\n\t'
 
-CLANG_FORMAT_FILE_EXTS=(".c" ".h" ".cpp" ".hpp" ".cc" ".hh" ".cxx" ".m" ".mm" ".inc" ".java" ".glsl")
+if [ $# -eq 0 ]; then
+    # Loop through all code files tracked by Git.
+    files=$(git ls-files -- '*.c' '*.h' '*.cpp' '*.hpp' '*.cc' '*.hh' '*.cxx' '*.m' '*.mm' '*.inc' '*.java' '*.glsl' \
+                ':!:.git/*' ':!:thirdparty/*' ':!:*/thirdparty/*' ':!:platform/android/java/lib/src/com/google/*' \
+                ':!:*-so_wrap.*' ':!:tests/python_build/*')
+else
+    # $1 should be a file listing file paths to process. Used in CI.
+    files=$(cat "$1" | grep -v "thirdparty/" | grep -E "\.(c|h|cpp|hpp|cc|hh|cxx|m|mm|inc|java|glsl)$" | grep -v "platform/android/java/lib/src/com/google/" | grep -v "\-so_wrap\." | grep -v "tests/python_build/")
+fi
 
-# Loops through all text files tracked by Git.
-git grep -zIl '' |
-while IFS= read -rd '' f; do
-    # Exclude some files.
-    if [[ "$f" == "thirdparty"* ]]; then
+if [ ! -z "$files" ]; then
+    clang-format --Wno-error=unknown -i $files
+fi
+
+# Fix copyright headers, but not all files get them.
+for f in $files; do
+    if [[ "$f" == *"inc" ]]; then
         continue
-    elif [[ "$f" == "platform/android/java/lib/src/com/google"* ]]; then
+    elif [[ "$f" == *"glsl" ]]; then
         continue
-    elif [[ "$f" == *"-so_wrap."* ]]; then
+    elif [[ "$f" == "platform/android/java/lib/src/org/godotengine/godot/gl/GLSurfaceView"* ]]; then
+        continue
+    elif [[ "$f" == "platform/android/java/lib/src/org/godotengine/godot/gl/EGLLogWrapper"* ]]; then
+        continue
+    elif [[ "$f" == "platform/android/java/lib/src/org/godotengine/godot/utils/ProcessPhoenix"* ]]; then
         continue
     fi
 
-    for extension in ${CLANG_FORMAT_FILE_EXTS[@]}; do
-        if [[ "$f" == *"$extension" ]]; then
-            # Run clang-format.
-            clang-format -i "$f"
-            # Fix copyright headers, but not all files get them.
-            if [[ "$f" == *"inc" ]]; then
-                continue 2
-            elif [[ "$f" == *"glsl" ]]; then
-                continue 2
-            elif [[ "$f" == *"theme_data.h" ]]; then
-                continue 2
-            elif [[ "$f" == "platform/android/java/lib/src/org/godotengine/godot/input/InputManager"* ]]; then
-                continue 2
-            fi
-            python misc/scripts/copyright_headers.py "$f"
-            continue 2
-        fi
-    done
+    python misc/scripts/copyright_headers.py "$f"
 done
 
-git diff > patch.patch
+diff=$(git diff --color)
 
-# If no patch has been generated all is OK, clean up, and exit.
-if [ ! -s patch.patch ] ; then
-    printf "Files in this commit comply with the clang-format style rules.\n"
-    rm -f patch.patch
+# If no diff has been generated all is OK, clean up, and exit.
+if [ -z "$diff" ] ; then
+    printf "\e[1;32m*** Files in this commit comply with the clang-format style rules.\e[0m\n"
     exit 0
 fi
 
-# A patch has been created, notify the user, clean up, and exit.
-printf "\n*** The following differences were found between the code "
-printf "and the formatting rules:\n\n"
-cat patch.patch
-printf "\n*** Aborting, please fix your commit(s) with 'git commit --amend' or 'git rebase -i <hash>'\n"
-rm -f patch.patch
+# A diff has been created, notify the user, clean up, and exit.
+printf "\n\e[1;33m*** The following changes must be made to comply with the formatting rules:\e[0m\n\n"
+# Perl commands replace trailing spaces with `·` and tabs with `<TAB>`.
+printf "$diff\n" | perl -pe 's/(.*[^ ])( +)(\e\[m)$/my $spaces="·" x length($2); sprintf("$1$spaces$3")/ge' | perl -pe 's/(.*[^\t])(\t+)(\e\[m)$/my $tabs="<TAB>" x length($2); sprintf("$1$tabs$3")/ge'
+
+printf "\n\e[1;91m*** Please fix your commit(s) with 'git commit --amend' or 'git rebase -i <hash>'\e[0m\n"
 exit 1

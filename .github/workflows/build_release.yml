@@ -15,9 +15,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install -qq dos2unix recode clang-format-11
+          # Add clang repository (so we have clang-format-14)
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
+          sudo apt-get update
+          # Install required deps
+          sudo apt-get install -qq dos2unix moreutils recode clang-format-14
           sudo update-alternatives --remove-all clang-format
-          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-11 100
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 100
           sudo pip3 install black==22.3.0 pygments
 
       - name: File formatting checks (file_format.sh)
