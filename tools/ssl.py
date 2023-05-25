@@ -1,6 +1,7 @@
 import os
 from SCons.Defaults import Mkdir
 
+
 def ssl_emitter(target, source, env):
     env.Depends(env["SSL_LIBS"], env.File(__file__))
     return env["SSL_LIBS"], [env.Dir(env["SSL_SOURCE"]), env.File(env["SSL_SOURCE"] + "/VERSION.dat")]
@@ -33,15 +34,17 @@ def ssl_action(target, source, env):
 
     elif env["platform"] == "android":
         api = env["android_api_level"] if int(env["android_api_level"]) > 28 else "28"
-        args.extend([
-            {
-                "arm64": "android-arm64",
-                "arm32": "android-arm",
-                "x86_32": "android-x86",
-                "x86_64": "android-x86_64",
-            }[env["arch"]],
-            "-D__ANDROID_API__=%s" % api,
-        ])
+        args.extend(
+            [
+                {
+                    "arm64": "android-arm64",
+                    "arm32": "android-arm",
+                    "x86_32": "android-x86",
+                    "x86_64": "android-x86_64",
+                }[env["arch"]],
+                "-D__ANDROID_API__=%s" % api,
+            ]
+        )
         # Setup toolchain path.
         ssl_env.PrependENVPath("PATH", os.path.dirname(env["CC"]))
         ssl_env["ENV"]["ANDROID_NDK_ROOT"] = os.environ.get("ANDROID_NDK_ROOT", "")
@@ -56,7 +59,7 @@ def ssl_action(target, source, env):
 
     elif env["platform"] == "ios":
         if env["ios_simulator"]:
-                args.extend(["iossimulator-xcrun"])
+            args.extend(["iossimulator-xcrun"])
         elif env["arch"] == "arm32":
             args.extend(["ios-xcrun"])
         elif env["arch"] == "arm64":
@@ -67,23 +70,28 @@ def ssl_action(target, source, env):
     elif env["platform"] == "windows":
         if env["arch"] == "x86_32":
             if env["use_mingw"]:
-                args.extend([
-                    "mingw",
-                    "--cross-compile-prefix=i686-w64-mingw32-",
-                ])
+                args.extend(
+                    [
+                        "mingw",
+                        "--cross-compile-prefix=i686-w64-mingw32-",
+                    ]
+                )
             else:
                 args.extend(["VC-WIN32"])
         else:
             if env["use_mingw"]:
-                args.extend([
-                    "mingw64",
-                    "--cross-compile-prefix=x86_64-w64-mingw32-",
-                ])
+                args.extend(
+                    [
+                        "mingw64",
+                        "--cross-compile-prefix=x86_64-w64-mingw32-",
+                    ]
+                )
             else:
                 args.extend(["VC-WIN64A"])
 
     jobs = env.GetOption("num_jobs")
-    ssl_env.Execute([
+    ssl_env.Execute(
+        [
             Mkdir(build_dir),
             "cd %s && perl %s/Configure %s" % (build_dir, source_dir, " ".join(['"%s"' % a for a in args])),
             "make -C %s -j%s" % (build_dir, jobs),
@@ -105,9 +113,7 @@ def generate(env):
     env["SSL_LIBRARY"] = env.File(env["SSL_BUILD"] + "/libssl.a")
     env["SSL_CRYPTO_LIBRARY"] = env.File(env["SSL_BUILD"] + "/libcrypto.a")
     env["SSL_LIBS"] = [env["SSL_LIBRARY"], env["SSL_CRYPTO_LIBRARY"]]
-    env.Append(BUILDERS={
-        "BuildOpenSSL": env.Builder(action=ssl_action, emitter=ssl_emitter)
-    })
+    env.Append(BUILDERS={"BuildOpenSSL": env.Builder(action=ssl_action, emitter=ssl_emitter)})
     env.Prepend(CPPPATH=[env["SSL_INCLUDE"]])
     env.Prepend(LIBPATH=[env["SSL_BUILD"]])
     env.Append(LIBS=env["SSL_LIBS"])

@@ -6,29 +6,21 @@ set -uo pipefail
 
 # Apply black.
 echo -e "Formatting Python files..."
-PY_FILES=$(find \( -path "./.git" \
-                -o -path "./webrtc" \
-                -o -path "./godot-cpp" \
-                \) -prune \
-                -o \( -name "SConstruct" \
-                -o -name "SCsub" \
-                -o -name "*.py" \
-                \) -print)
+PY_FILES=$(git ls-files -- '*SConstruct' '*SCsub' '*.py' ':!:.git/*' ':!:thirdparty/*')
 black -l 120 $PY_FILES
 
-git diff > patch.patch
+diff=$(git diff --color)
 
-# If no patch has been generated all is OK, clean up, and exit.
-if [ ! -s patch.patch ] ; then
-    printf "Files in this commit comply with the black style rules.\n"
-    rm -f patch.patch
+# If no diff has been generated all is OK, clean up, and exit.
+if [ -z "$diff" ] ; then
+    printf "\e[1;32m*** Files in this commit comply with the black style rules.\e[0m\n"
     exit 0
 fi
 
-# A patch has been created, notify the user, clean up, and exit.
-printf "\n*** The following differences were found between the code "
-printf "and the formatting rules:\n\n"
-cat patch.patch
-printf "\n*** Aborting, please fix your commit(s) with 'git commit --amend' or 'git rebase -i <hash>'\n"
-rm -f patch.patch
+# A diff has been created, notify the user, clean up, and exit.
+printf "\n\e[1;33m*** The following changes must be made to comply with the formatting rules:\e[0m\n\n"
+# Perl commands replace trailing spaces with `·` and tabs with `<TAB>`.
+printf "$diff\n" | perl -pe 's/(.*[^ ])( +)(\e\[m)$/my $spaces="·" x length($2); sprintf("$1$spaces$3")/ge' | perl -pe 's/(.*[^\t])(\t+)(\e\[m)$/my $tabs="<TAB>" x length($2); sprintf("$1$tabs$3")/ge'
+
+printf "\n\e[1;91m*** Please fix your commit(s) with 'git commit --amend' or 'git rebase -i <hash>'\e[0m\n"
 exit 1
