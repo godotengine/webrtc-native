@@ -28,12 +28,15 @@ if env["godot_version"] == "3":
     env = SConscript("godot-cpp-3.x/SConstruct")
 
     # Patch base env
-    replace_flags(env["CCFLAGS"], {
-        "-mios-simulator-version-min=10.0": "-mios-simulator-version-min=11.0",
-        "-miphoneos-version-min=10.0": "-miphoneos-version-min=11.0",
-        "/std:c++14": "/std:c++17",
-        "-std=c++14": "-std=c++17",
-    })
+    replace_flags(
+        env["CCFLAGS"],
+        {
+            "-mios-simulator-version-min=10.0": "-mios-simulator-version-min=11.0",
+            "-miphoneos-version-min=10.0": "-miphoneos-version-min=11.0",
+            "/std:c++14": "/std:c++17",
+            "-std=c++14": "-std=c++17",
+        },
+    )
 
     env = env.Clone()
 
@@ -87,7 +90,7 @@ else:
 # Then we prepend PATH to make it take precedence, while preserving SCons' own entries.
 env.PrependENVPath("PATH", os.getenv("PATH"))
 env.PrependENVPath("PKG_CONFIG_PATH", os.getenv("PKG_CONFIG_PATH"))
-if "TERM" in os.environ: # Used for colored output.
+if "TERM" in os.environ:  # Used for colored output.
     env["ENV"]["TERM"] = os.environ["TERM"]
 
 # Patch mingw SHLIBSUFFIX.
@@ -132,7 +135,9 @@ if mac_universal:
         benv = env.Clone()
         benv["arch"] = arch
         benv["CCFLAGS"] = SCons.Util.CLVar(str(benv["CCFLAGS"]).replace("-arch x86_64 -arch arm64", "-arch " + arch))
-        benv["LINKFLAGS"] = SCons.Util.CLVar(str(benv["LINKFLAGS"]).replace("-arch x86_64 -arch arm64", "-arch " + arch))
+        benv["LINKFLAGS"] = SCons.Util.CLVar(
+            str(benv["LINKFLAGS"]).replace("-arch x86_64 -arch arm64", "-arch " + arch)
+        )
         benv["suffix"] = benv["suffix"].replace("universal", arch)
         benv["SHOBJSUFFIX"] = benv["suffix"] + benv["SHOBJSUFFIX"]
         build_envs.append(benv)
@@ -144,7 +149,7 @@ for benv in build_envs:
         benv.Tool(tool, toolpath=["tools"])
 
     ssl = benv.BuildOpenSSL()
-    benv.NoCache(ssl) # Needs refactoring to properly cache generated headers.
+    benv.NoCache(ssl)  # Needs refactoring to properly cache generated headers.
     rtc = benv.BuildLibDataChannel()
 
     benv.Depends(sources, [ssl, rtc])
@@ -159,17 +164,23 @@ Default(build_targets)
 # For macOS universal builds, join the libraries using lipo.
 if mac_universal:
     result_name = "libwebrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
-    universal_target = env.Command(os.path.join(result_path, "lib", result_name), build_targets, "lipo $SOURCES -output $TARGETS -create")
+    universal_target = env.Command(
+        os.path.join(result_path, "lib", result_name), build_targets, "lipo $SOURCES -output $TARGETS -create"
+    )
     Default(universal_target)
 
 # GDNativeLibrary
 if env["godot_version"] == "3":
     gdnlib = "webrtc" if target != "debug" else "webrtc_debug"
     ext = ".tres"
-    extfile = env.Substfile(os.path.join(result_path, gdnlib + ext), "misc/webrtc" + ext, SUBST_DICT={
-        "{GDNATIVE_PATH}": gdnlib,
-        "{TARGET}": "template_" + env["target"],
-    })
+    extfile = env.Substfile(
+        os.path.join(result_path, gdnlib + ext),
+        "misc/webrtc" + ext,
+        SUBST_DICT={
+            "{GDNATIVE_PATH}": gdnlib,
+            "{TARGET}": "template_" + env["target"],
+        },
+    )
 else:
     extfile = env.InstallAs(os.path.join(result_path, "webrtc.gdextension"), "misc/webrtc.gdextension")
 
