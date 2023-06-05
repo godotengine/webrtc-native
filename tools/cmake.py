@@ -1,4 +1,4 @@
-import os
+import os, sys
 
 
 def exists(env):
@@ -16,17 +16,27 @@ def cmake_configure(env, source, target, opt_args):
         "-B",
         target,
     ]
-    if env["platform"] == "windows" and env["use_mingw"]:
-        args.extend(["-G", "Unix Makefiles"])
+
+    if env["platform"] == "windows":
+        if env.get("is_msvc", False):
+            args.extend(["-G", "NMake Makefiles"])
+        elif sys.platform in ["win32", "msys", "cygwin"]:
+            args.extend(["-G", "Ninja"])
+        else:
+            args.extend(["-G", "Unix Makefiles"])
+
     for arg in opt_args:
         args.append(arg)
     args.append(source)
     return env.Execute("cmake " + " ".join(['"%s"' % a for a in args]))
 
 
-def cmake_build(env, source, target=""):
+def cmake_build(env, source, target="", opt_args=[]):
     jobs = env.GetOption("num_jobs")
-    return env.Execute("cmake --build %s %s -j%s" % (source, "-t %s" % target if target else "", jobs))
+    return env.Execute(
+        "cmake --build %s %s -j%s %s"
+        % (source, "-t %s" % target if target else "", jobs, " ".join(['"%s"' % a for a in opt_args]))
+    )
 
 
 def cmake_platform_flags(env, config=None):
@@ -62,10 +72,23 @@ def cmake_platform_flags(env, config=None):
 
     elif env["platform"] == "macos":
         if env["arch"] == "universal":
-            raise ValueError("OSX architecture not supported: %s" % env["arch"])
-        config["CMAKE_OSX_ARCHITECTURES"] = env["arch"]
+            config["CMAKE_OSX_ARCHITECTURES"] = "x86_64;arm64"
+        else:
+            config["CMAKE_OSX_ARCHITECTURES"] = env["arch"]
         if env["macos_deployment_target"] != "default":
             config["CMAKE_OSX_DEPLOYMENT_TARGET"] = env["macos_deployment_target"]
+
+        if env["platform"] == "macos" and sys.platform != "darwin" and "OSXCROSS_ROOT" in os.environ:
+            config["CMAKE_AR"] = env["AR"]
+            config["CMAKE_RANLIB"] = env["RANLIB"]
+            if env["arch"] == "universal":
+                flags = "-arch x86_64 -arch arm64"
+            else:
+                flags = "-arch " + env["arch"]
+            if env["macos_deployment_target"] != "default":
+                flags += " -mmacosx-version-min=" + env["macos_deployment_target"]
+            config["CMAKE_C_FLAGS"] = flags
+            config["CMAKE_CXX_FLAGS"] = flags
 
     elif env["platform"] == "ios":
         if env["arch"] == "universal":

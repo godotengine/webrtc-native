@@ -81,13 +81,17 @@ if env["godot_version"] == "3":
     env["suffix"] = ".{}.{}.{}".format(env["platform"], target_compat, env["arch_suffix"])
     env["debug_symbols"] = False
 
-    # Set missing CC for MinGW from upstream build module.
-    if env["platform"] == "windows" and sys.platform != "win32" and sys.platform != "msys":
-        # Cross-compilation using MinGW
-        if env["bits"] == "64":
-            env["CC"] = "x86_64-w64-mingw32-gcc"
-        elif env["bits"] == "32":
-            env["CC"] = "i686-w64-mingw32-gcc"
+    # Some windows specific hacks.
+    if env["platform"] == "windows":
+        if sys.platform not in ["win32", "msys"]:
+            # Set missing CC for MinGW from upstream build module.
+            if env["bits"] == "64":
+                env["CC"] = "x86_64-w64-mingw32-gcc"
+            elif env["bits"] == "32":
+                env["CC"] = "i686-w64-mingw32-gcc"
+        elif not env["use_mingw"]:
+            # Mark as MSVC build (would have failed to build the library otherwise).
+            env["is_msvc"] = True
 else:
     env = SConscript("godot-cpp/SConstruct").Clone()
 
@@ -103,6 +107,12 @@ if "TERM" in os.environ:  # Used for colored output.
 # Patch mingw SHLIBSUFFIX.
 if env["platform"] == "windows" and env["use_mingw"]:
     env["SHLIBSUFFIX"] = ".dll"
+
+# Patch OSXCross config.
+if env["platform"] == "macos" and os.environ.get("OSXCROSS_ROOT", ""):
+    env["SHLIBSUFFIX"] = ".dylib"
+    if env["macos_deployment_target"] != "default":
+        env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = env["macos_deployment_target"]
 
 opts.Update(env)
 
@@ -129,52 +139,20 @@ else:
     sources.append("src/init_gdnative.cpp")
     add_sources(sources, "src/net/", "cpp")
 
-# Since the OpenSSL build system does not support macOS universal binaries, we first need to build the two libraries
-# separately, then we join them together using lipo.
-mac_universal = env["platform"] == "macos" and env["arch"] == "universal"
-build_targets = []
-build_envs = [env]
+# Add our build tools
+for tool in ["openssl", "cmake", "rtc"]:
+    env.Tool(tool, toolpath=["tools"])
 
-# For macOS universal builds, setup one build environment per architecture.
-if mac_universal:
-    build_envs = []
-    for arch in ["x86_64", "arm64"]:
-        benv = env.Clone()
-        benv["arch"] = arch
-        benv["CCFLAGS"] = SCons.Util.CLVar(str(benv["CCFLAGS"]).replace("-arch x86_64 -arch arm64", "-arch " + arch))
-        benv["LINKFLAGS"] = SCons.Util.CLVar(
-            str(benv["LINKFLAGS"]).replace("-arch x86_64 -arch arm64", "-arch " + arch)
-        )
-        benv["suffix"] = benv["suffix"].replace("universal", arch)
-        benv["SHOBJSUFFIX"] = benv["suffix"] + benv["SHOBJSUFFIX"]
-        build_envs.append(benv)
+ssl = env.OpenSSL()
 
-# Build our library and its dependencies.
-for benv in build_envs:
-    # Dependencies
-    for tool in ["cmake", "common", "ssl", "rtc"]:
-        benv.Tool(tool, toolpath=["tools"])
+rtc = env.BuildLibDataChannel()
 
-    ssl = benv.BuildOpenSSL()
-    benv.NoCache(ssl)  # Needs refactoring to properly cache generated headers.
-    rtc = benv.BuildLibDataChannel()
+env.Depends(sources, [ssl, rtc])
 
-    benv.Depends(sources, [ssl, rtc])
-
-    # Make the shared library
-    result_name = "webrtc_native{}{}".format(benv["suffix"], benv["SHLIBSUFFIX"])
-    library = benv.SharedLibrary(target=os.path.join(result_path, "lib", result_name), source=sources)
-    build_targets.append(library)
-
-Default(build_targets)
-
-# For macOS universal builds, join the libraries using lipo.
-if mac_universal:
-    result_name = "libwebrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
-    universal_target = env.Command(
-        os.path.join(result_path, "lib", result_name), build_targets, "lipo $SOURCES -output $TARGETS -create"
-    )
-    Default(universal_target)
+# Make the shared library
+result_name = "libwebrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
+library = env.SharedLibrary(target=os.path.join(result_path, "lib", result_name), source=sources)
+Default(library)
 
 # GDNativeLibrary
 if env["godot_version"] == "3":
