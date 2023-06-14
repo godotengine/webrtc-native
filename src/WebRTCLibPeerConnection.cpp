@@ -180,7 +180,7 @@ Error WebRTCLibPeerConnection::_initialize(const Dictionary &p_config) {
 	return _create_pc(config);
 }
 
-Object *WebRTCLibPeerConnection::_create_data_channel(const String &p_channel, const Dictionary &p_channel_config) try {
+Ref<WebRTCDataChannel> WebRTCLibPeerConnection::_create_data_channel(const String &p_channel, const Dictionary &p_channel_config) try {
 	ERR_FAIL_COND_V(!peer_connection, nullptr);
 
 	// Read config from dictionary

@@ -79,7 +79,7 @@ public:
 	SignalingState _get_signaling_state() const override;
 
 	godot::Error _initialize(const godot::Dictionary &p_config) override;
-	godot::Object *_create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) override;
+	godot::Ref<godot::WebRTCDataChannel> _create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) override;
 	godot::Error _create_offer() override;
 	godot::Error _set_remote_description(const godot::String &type, const godot::String &sdp) override;
 	godot::Error _set_local_description(const godot::String &type, const godot::String &sdp) override;
