@@ -1,47 +1,14 @@
 import os, sys
 
-
-def exists(env):
-    return True
-
-
-def generate(env):
-    env.AddMethod(cmake_configure, "CMakeConfigure")
-    env.AddMethod(cmake_build, "CMakeBuild")
-    env.AddMethod(cmake_platform_flags, "CMakePlatformFlags")
+import SCons.Util
+import SCons.Builder
+import SCons.Action
 
 
-def cmake_configure(env, source, target, opt_args):
-    args = [
-        "-B",
-        target,
-    ]
-
-    if env["platform"] == "windows":
-        if env.get("is_msvc", False):
-            args.extend(["-G", "NMake Makefiles"])
-        elif sys.platform in ["win32", "msys", "cygwin"]:
-            args.extend(["-G", "Ninja"])
-        else:
-            args.extend(["-G", "Unix Makefiles"])
-
-    for arg in opt_args:
-        args.append(arg)
-    args.append(source)
-    return env.Execute("cmake " + " ".join(['"%s"' % a for a in args]))
-
-
-def cmake_build(env, source, target="", opt_args=[]):
-    jobs = env.GetOption("num_jobs")
-    return env.Execute(
-        "cmake --build %s %s -j%s %s"
-        % (source, "-t %s" % target if target else "", jobs, " ".join(['"%s"' % a for a in opt_args]))
-    )
-
-
-def cmake_platform_flags(env, config=None):
-    if config is None:
-        config = {}
+def cmake_platform_config(env):
+    config = {
+        "CMAKE_BUILD_TYPE": env["CMAKEBUILDTYPE"],
+    }
 
     if "CC" in env:
         config["CMAKE_C_COMPILER"] = env["CC"]
@@ -60,8 +27,8 @@ def cmake_platform_flags(env, config=None):
         config["CMAKE_SYSTEM_VERSION"] = api
         config["CMAKE_ANDROID_ARCH_ABI"] = abi
         config["ANDROID_ABI"] = abi
-        config["CMAKE_TOOLCHAIN_FILE"] = "%s/build/cmake/android.toolchain.cmake" % os.environ.get(
-            "ANDROID_NDK_ROOT", ""
+        config["CMAKE_TOOLCHAIN_FILE"] = "%s/build/cmake/android.toolchain.cmake" % env.get(
+            "ANDROID_NDK_ROOT", os.environ.get("ANDROID_NDK_ROOT", "")
         )
         config["CMAKE_ANDROID_STL_TYPE"] = "c++_static"
 
@@ -95,7 +62,7 @@ def cmake_platform_flags(env, config=None):
             raise ValueError("iOS architecture not supported: %s" % env["arch"])
         config["CMAKE_SYSTEM_NAME"] = "iOS"
         config["CMAKE_OSX_ARCHITECTURES"] = env["arch"]
-        if env["ios_min_version"] != "default":
+        if env.get("ios_min_version", "default") != "default":
             config["CMAKE_OSX_DEPLOYMENT_TARGET"] = env["ios_min_version"]
         if env["ios_simulator"]:
             config["CMAKE_OSX_SYSROOT"] = "iphonesimulator"
@@ -103,4 +70,40 @@ def cmake_platform_flags(env, config=None):
     elif env["platform"] == "windows":
         config["CMAKE_SYSTEM_NAME"] = "Windows"
 
-    return config
+    flags = ["'-D%s=%s'" % it for it in config.items()]
+    if env["CMAKEGENERATOR"]:
+        flags.extend(["-G", env["CMAKEGENERATOR"]])
+    elif env["platform"] == "windows":
+        if env.get("is_msvc", False):
+            flags.extend(["-G", "NMake Makefiles"])
+        elif sys.platform in ["win32", "msys", "cygwin"]:
+            flags.extend(["-G", "Ninja"])
+        else:
+            flags.extend(["-G", "Unix Makefiles"])
+    return flags
+
+
+def cmake_emitter(target, source, env):
+    return [str(target[0]) + "/CMakeCache.txt"] + target[1:], [str(source[0]) + "/CMakeLists.txt"] + source[1:]
+
+
+cmake_configure_action = SCons.Action.Action("$CMAKECONFCOM", "$CMAKECONFCOMSTR")
+cmake_build_action = SCons.Action.Action("$CMAKEBUILDCOM", "$CMAKEBUILDCOMSTR")
+cmake_builder = SCons.Builder.Builder(action=[cmake_configure_action, cmake_build_action], emitter=cmake_emitter)
+
+
+def exists(env):
+    return True
+
+
+def generate(env):
+    env["CMAKE"] = "cmake"
+    env["_cmake_platform_config"] = cmake_platform_config
+    env["CMAKEPLATFORMCONFIG"] = "${_cmake_platform_config(__env__)}"
+    env["CMAKEBUILDTYPE"] = "Release"
+    env["CMAKEGENERATOR"] = ""
+    env["CMAKECONFFLAGS"] = SCons.Util.CLVar("")
+    env["CMAKECONFCOM"] = "$CMAKE -B ${TARGET.dir} $CMAKEPLATFORMCONFIG $CMAKECONFFLAGS ${SOURCE.dir}"
+    env["CMAKEBUILDFLAGS"] = SCons.Util.CLVar("")
+    env["CMAKEBUILDCOM"] = "$CMAKE --build ${TARGET.dir} $CMAKEBUILDFLAGS"
+    env["BUILDERS"]["CMake"] = cmake_builder
