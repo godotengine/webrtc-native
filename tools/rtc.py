@@ -12,49 +12,36 @@ def rtc_cmake_config(env):
         "OPENSSL_INCLUDE_DIR": env["SSL_INCLUDE"],
         "OPENSSL_SSL_LIBRARY": env["SSL_LIBRARY"],
         "OPENSSL_CRYPTO_LIBRARY": env["SSL_CRYPTO_LIBRARY"],
-        "OPENSSL_ROOT_DIR": env["SSL_BUILD"],
-        "CMAKE_BUILD_TYPE": "%s" % ("RelWithDebInfo" if env["debug_symbols"] else "Release"),
+        "OPENSSL_ROOT_DIR": env["SSL_INSTALL"],
     }
-    return env.CMakePlatformFlags(config)
+    return config
 
 
-def rtc_emitter(target, source, env):
+def build_library(env):
     if env["platform"] == "windows":
         env.PrependUnique(LIBS=["iphlpapi", "bcrypt"])
 
     env.Prepend(LIBS=env["RTC_LIBS"])
 
-    env.Depends(env["RTC_LIBS"], env["SSL_LIBS"])
-    env.Depends(
-        env["RTC_LIBS"],
-        [env.File(__file__), env.Dir(env["RTC_SOURCE"]), env.File(env["RTC_SOURCE"] + "/CMakeLists.txt")],
-    )
-    return env["RTC_LIBS"], env.Dir(env["RTC_SOURCE"])
-
-
-def rtc_action(target, source, env):
     rtc_env = env.Clone()
-    build_dir = env["RTC_BUILD"]
-    source_dir = env["RTC_SOURCE"]
-    opts = rtc_cmake_config(rtc_env)
-    rtc_env.CMakeConfigure(source_dir, build_dir, ["-D%s=%s" % it for it in opts.items()])
-    opt_args = []
-    if env.get("is_msvc", False):
-        opt_args = ["--config", opts["CMAKE_BUILD_TYPE"]]
-    rtc_env.CMakeBuild(build_dir, "datachannel-static", opt_args=opt_args)
-    return None
+    rtc_targets = [env.Dir(env["RTC_BUILD"])] + env["RTC_LIBS"]
+    rtc_sources = [env.Dir(env["RTC_SOURCE"])]
+    rtc_env.Append(CMAKECONFFLAGS=["'-D%s=%s'" % it for it in rtc_cmake_config(env).items()])
+    rtc_env.Append(CMAKEBUILDFLAGS=["-t", "datachannel-static", "-j%s" % env.GetOption("num_jobs")])
+    rtc = rtc_env.CMake(rtc_targets, rtc_sources, CMAKEBUILDTYPE=env["RTC_BUILD_TYPE"])
+    rtc_env.Depends(rtc, rtc_env["SSL_LIBS"])
+    return rtc
 
 
 def exists(env):
-    return "CMakeConfigure" in env and "CMakeBuild" in env
+    return "CMake" in env
 
 
 def generate(env):
     env["RTC_SOURCE"] = env.Dir("#thirdparty/libdatachannel").abspath
+    env["RTC_BUILD_TYPE"] = "RelWithDebInfo" if env["debug_symbols"] else "Release"
     env["RTC_BUILD"] = env.Dir(
-        "#bin/thirdparty/libdatachannel/{}/{}/{}".format(
-            env["platform"], env["arch"], "RelWithDebInfo" if env["debug_symbols"] else "Release"
-        )
+        "#bin/thirdparty/libdatachannel/{}/{}/{}".format(env["platform"], env["arch"], env["RTC_BUILD_TYPE"])
     ).abspath
     env["RTC_INCLUDE"] = env["RTC_SOURCE"] + "/include"
     lib_ext = ".a"
@@ -71,6 +58,6 @@ def generate(env):
             "deps/usrsctp/usrsctplib/{}usrsctp{}".format(lib_prefix, lib_ext),
         ]
     ]
-    env.Append(BUILDERS={"BuildLibDataChannel": env.Builder(action=rtc_action, emitter=rtc_emitter)})
+    env.AddMethod(build_library, "BuildLibDataChannel")
     env.Append(LIBPATH=[env["RTC_BUILD"]])
     env.Append(CPPPATH=[env["RTC_INCLUDE"]])
