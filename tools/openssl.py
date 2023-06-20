@@ -144,6 +144,17 @@ def build_openssl(env, jobs=None):
     return ssl
 
 
+def ssl_generator(target, source, env, for_signature):
+    # Strip the -j option for signature to avoid rebuilding when num_jobs changes.
+    build = env["SSLBUILDCOM"].replace("-j$SSLBUILDJOBS", "") if for_signature else env["SSLBUILDCOM"]
+    return [
+        Mkdir("$SSL_BUILD"),
+        Mkdir("$SSL_INSTALL"),
+        SCons.Action.Action("$SSLCONFIGCOM", "$SSLCONFIGCOMSTR"),
+        SCons.Action.Action(build, "$SSLBUILDCOMSTR"),
+    ]
+
+
 def options(opts):
     opts.Add(PathVariable("openssl_source", "Path to the openssl sources.", "thirdparty/openssl"))
     opts.Add("openssl_build", "Destination path of the openssl build.", "bin/thirdparty/openssl")
@@ -194,13 +205,5 @@ def generate(env):
     if env["platform"] == "windows" and env.get("is_msvc", False):
         env["SSLBUILDCOM"] = "cd ${TARGET.dir} && nmake install_sw install_ssldirs"
 
-    env["BUILDERS"]["OpenSSLBuilder"] = SCons.Builder.Builder(
-        action=[
-            Mkdir("$SSL_BUILD"),
-            Mkdir("$SSL_INSTALL"),
-            SCons.Action.Action("$SSLCONFIGCOM", "$SSLCONFIGCOMSTR"),
-            SCons.Action.Action("$SSLBUILDCOM", "$SSLBUILDCOMSTR"),
-        ],
-        emitter=ssl_emitter,
-    )
+    env["BUILDERS"]["OpenSSLBuilder"] = SCons.Builder.Builder(generator=ssl_generator, emitter=ssl_emitter)
     env.AddMethod(build_openssl, "OpenSSL")

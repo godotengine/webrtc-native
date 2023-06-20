@@ -27,7 +27,7 @@ def build_library(env):
     rtc_targets = [env.Dir(env["RTC_BUILD"])] + env["RTC_LIBS"]
     rtc_sources = [env.Dir(env["RTC_SOURCE"])]
     rtc_env.Append(CMAKECONFFLAGS=["'-D%s=%s'" % it for it in rtc_cmake_config(env).items()])
-    rtc_env.Append(CMAKEBUILDFLAGS=["-t", "datachannel-static", "-j%s" % env.GetOption("num_jobs")])
+    rtc_env.Append(CMAKEBUILDFLAGS=["-t", "datachannel-static"])
     rtc = rtc_env.CMake(rtc_targets, rtc_sources, CMAKEBUILDTYPE=env["RTC_BUILD_TYPE"])
     rtc_env.Depends(rtc, rtc_env["SSL_LIBS"])
     return rtc

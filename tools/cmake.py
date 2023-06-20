@@ -87,9 +87,13 @@ def cmake_emitter(target, source, env):
     return [str(target[0]) + "/CMakeCache.txt"] + target[1:], [str(source[0]) + "/CMakeLists.txt"] + source[1:]
 
 
-cmake_configure_action = SCons.Action.Action("$CMAKECONFCOM", "$CMAKECONFCOMSTR")
-cmake_build_action = SCons.Action.Action("$CMAKEBUILDCOM", "$CMAKEBUILDCOMSTR")
-cmake_builder = SCons.Builder.Builder(action=[cmake_configure_action, cmake_build_action], emitter=cmake_emitter)
+def cmake_generator(target, source, env, for_signature):
+    # Strip the -j option for signature to avoid rebuilding when num_jobs changes.
+    build = env["CMAKEBUILDCOM"].replace("-j$CMAKEBUILDJOBS", "") if for_signature else env["CMAKEBUILDCOM"]
+    return [
+        SCons.Action.Action("$CMAKECONFCOM", "$CMAKECONFCOMSTR"),
+        SCons.Action.Action(build, "$CMAKEBUILDCOMSTR"),
+    ]
 
 
 def exists(env):
@@ -104,6 +108,7 @@ def generate(env):
     env["CMAKEGENERATOR"] = ""
     env["CMAKECONFFLAGS"] = SCons.Util.CLVar("")
     env["CMAKECONFCOM"] = "$CMAKE -B ${TARGET.dir} $CMAKEPLATFORMCONFIG $CMAKECONFFLAGS ${SOURCE.dir}"
+    env["CMAKEBUILDJOBS"] = "${__env__.GetOption('num_jobs')}"
     env["CMAKEBUILDFLAGS"] = SCons.Util.CLVar("")
-    env["CMAKEBUILDCOM"] = "$CMAKE --build ${TARGET.dir} $CMAKEBUILDFLAGS"
-    env["BUILDERS"]["CMake"] = cmake_builder
+    env["CMAKEBUILDCOM"] = "$CMAKE --build ${TARGET.dir} $CMAKEBUILDFLAGS -j$CMAKEBUILDJOBS"
+    env["BUILDERS"]["CMake"] = SCons.Builder.Builder(generator=cmake_generator, emitter=cmake_emitter)
