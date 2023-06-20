@@ -5,10 +5,11 @@ import SCons.Builder
 import SCons.Action
 
 
-def cmake_platform_config(env):
-    config = {
-        "CMAKE_BUILD_TYPE": env["CMAKEBUILDTYPE"],
-    }
+def cmake_default_flags(env):
+    if env.get("cmake_default_flags", ""):
+        return SCons.Util.CLVar(env["cmake_default_flags"])
+
+    config = {}
 
     if "CC" in env:
         config["CMAKE_C_COMPILER"] = env["CC"]
@@ -33,13 +34,17 @@ def cmake_platform_config(env):
         config["CMAKE_ANDROID_STL_TYPE"] = "c++_static"
 
     elif env["platform"] == "linux":
-        march = "-m32" if env["arch"] == "x86_32" else "-m64"
-        config["CMAKE_C_FLAGS"] = march
-        config["CMAKE_CXX_FLAGS"] = march
+        linux_flags = {
+            "x86_64": "-m64",
+            "x86_32": "-m32",
+        }.get(env["arch"], "")
+        if linux_flags:
+            config["CMAKE_C_FLAGS"] = linux_flags
+            config["CMAKE_CXX_FLAGS"] = linux_flags
 
     elif env["platform"] == "macos":
         if env["arch"] == "universal":
-            config["CMAKE_OSX_ARCHITECTURES"] = "x86_64;arm64"
+            config["CMAKE_OSX_ARCHITECTURES"] = '"x86_64;arm64"'
         else:
             config["CMAKE_OSX_ARCHITECTURES"] = env["arch"]
         if env["macos_deployment_target"] != "default":
@@ -70,7 +75,7 @@ def cmake_platform_config(env):
     elif env["platform"] == "windows":
         config["CMAKE_SYSTEM_NAME"] = "Windows"
 
-    flags = ["'-D%s=%s'" % it for it in config.items()]
+    flags = ["-D%s=%s" % it for it in config.items()]
     if env["CMAKEGENERATOR"]:
         flags.extend(["-G", env["CMAKEGENERATOR"]])
     elif env["platform"] == "windows":
@@ -96,18 +101,21 @@ def cmake_generator(target, source, env, for_signature):
     ]
 
 
+def options(opts):
+    opts.Add("cmake_default_flags", "Default CMake platform flags override, will be autodetected if not specified.", "")
+
+
 def exists(env):
     return True
 
 
 def generate(env):
     env["CMAKE"] = "cmake"
-    env["_cmake_platform_config"] = cmake_platform_config
-    env["CMAKEPLATFORMCONFIG"] = "${_cmake_platform_config(__env__)}"
-    env["CMAKEBUILDTYPE"] = "Release"
+    env["_cmake_default_flags"] = cmake_default_flags
+    env["CMAKEDEFAULTFLAGS"] = "${_cmake_default_flags(__env__)}"
     env["CMAKEGENERATOR"] = ""
     env["CMAKECONFFLAGS"] = SCons.Util.CLVar("")
-    env["CMAKECONFCOM"] = "$CMAKE -B ${TARGET.dir} $CMAKEPLATFORMCONFIG $CMAKECONFFLAGS ${SOURCE.dir}"
+    env["CMAKECONFCOM"] = "$CMAKE -B ${TARGET.dir} $CMAKEDEFAULTFLAGS $CMAKECONFFLAGS ${SOURCE.dir}"
     env["CMAKEBUILDJOBS"] = "${__env__.GetOption('num_jobs')}"
     env["CMAKEBUILDFLAGS"] = SCons.Util.CLVar("")
     env["CMAKEBUILDCOM"] = "$CMAKE --build ${TARGET.dir} $CMAKEBUILDFLAGS -j$CMAKEBUILDJOBS"
