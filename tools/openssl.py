@@ -119,6 +119,15 @@ def ssl_emitter(target, source, env):
 
 
 def build_openssl(env, jobs=None):
+    if env["SSL_EXTERNAL"]:
+        # Setup the env to use the provided libraries, and return them without building.
+        env.Prepend(CPPPATH=[env["SSL_INCLUDE"]])
+        env.Prepend(LIBPATH=[env["SSL_BUILD"]])
+        if env["platform"] == "windows":
+            env.PrependUnique(LIBS=["crypt32", "ws2_32", "advapi32", "user32"])
+        env.Prepend(LIBS=env["SSL_LIBS"])
+        return [env["SSL_CRYPTO_LIBRARY"], env["SSL_LIBRARY"]]
+
     if jobs is None:
         jobs = int(env.GetOption("num_jobs"))
 
@@ -155,11 +164,11 @@ def build_openssl(env, jobs=None):
         ssl = benv.OpenSSLBuilder()
         benv.NoCache(ssl)  # Needs refactoring to properly cache generated headers.
 
+    # Setup the environment to use the freshly built openssl.
     env.Prepend(CPPPATH=[env["SSL_INCLUDE"]])
     env.Prepend(LIBPATH=[env["SSL_BUILD"]])
     if env["platform"] == "windows":
         env.PrependUnique(LIBS=["crypt32", "ws2_32", "advapi32", "user32"])
-
     env.Prepend(LIBS=env["SSL_LIBS"])
 
     return ssl
@@ -192,6 +201,21 @@ def options(opts):
         "OpenSSL configure compiler flags override. Will be autodetected if not specified.",
         "",
     )
+    opts.Add(
+        "openssl_external_crypto",
+        'An external libcrypto static library (e.g. "/usr/lib/x86_64-linux-gnu/libcrypto.a"). If not provided, OpenSSL will be built from source.',
+        "",
+    )
+    opts.Add(
+        "openssl_external_ssl",
+        'An external libssl static library (e.g. "/usr/lib/x86_64-linux-gnu/libssl.a"). If not provided, OpenSSL will be built from source.',
+        "",
+    )
+    opts.Add(
+        "openssl_external_include",
+        'An external OpenSSL "include" folder (e.g. "/usr/include/openssl").',
+        "",
+    )
 
 
 def exists(env):
@@ -199,6 +223,29 @@ def exists(env):
 
 
 def generate(env):
+    env.AddMethod(build_openssl, "OpenSSL")
+
+    # Check if the user specified infos about external OpenSSL files.
+    external_opts = ["openssl_external_crypto", "openssl_external_ssl", "openssl_external_include"]
+    is_set = lambda k: env.get(k, "") != ""
+    if any(map(is_set, external_opts)):
+        # Need provide the whole (crypto, ssl, include) triple to proceed.
+        if not all(map(is_set, external_opts)):
+            print('Error: The options "%s" must all be set to use a external library.' % '", "'.join(external_opts))
+            sys.exit(255)
+
+        env["SSL_CRYPTO_LIBRARY"] = env.File("${openssl_external_crypto}")
+        env["SSL_LIBRARY"] = env.File("${openssl_external_ssl}")
+        env["SSL_BUILD"] = env.Dir("${SSL_LIBRARY.dir}").abspath
+        env["SSL_INSTALL"] = env.Dir("${SSL_LIBRARY.dir}").abspath
+        env["SSL_INCLUDE"] = env.Dir("${openssl_external_include}").abspath
+        env["SSL_LIBS"] = [env["SSL_LIBRARY"], env["SSL_CRYPTO_LIBRARY"]]
+        env["SSL_EXTERNAL"] = True
+        return
+
+    # We will need to build our own OpenSSL library.
+    env["SSL_EXTERNAL"] = False
+
     # Android needs the NDK in ENV, and proper PATH setup.
     if env["platform"] == "android" and env["ENV"].get("ANDROID_NDK_ROOT", "") == "":
         cc_path = os.path.dirname(env["CC"])
