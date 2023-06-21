@@ -6,6 +6,8 @@ entry_symbol = "webrtc_extension_init"
 
 linux.debug.x86_64 = "res://webrtc/lib/libwebrtc_native.linux.template_debug.x86_64.so"
 linux.debug.x86_32 = "res://webrtc/lib/libwebrtc_native.linux.template_debug.x86_32.so"
+linux.debug.arm64 = "res://webrtc/lib/libwebrtc_native.linux.template_debug.arm64.so"
+linux.debug.arm32 = "res://webrtc/lib/libwebrtc_native.linux.template_debug.arm32.so"
 macos.debug = "res://webrtc/lib/libwebrtc_native.macos.template_debug.universal.dylib"
 windows.debug.x86_64 = "res://webrtc/lib/libwebrtc_native.windows.template_debug.x86_64.dll"
 windows.debug.x86_32 = "res://webrtc/lib/libwebrtc_native.windows.template_debug.x86_32.dll"
@@ -16,6 +18,8 @@ ios.debug.x86_64 = "res://webrtc/lib/libwebrtc_native.ios.template_debug.x86_64.
 
 linux.release.x86_64 = "res://webrtc/lib/libwebrtc_native.linux.template_release.x86_64.so"
 linux.release.x86_32 = "res://webrtc/lib/libwebrtc_native.linux.template_release.x86_32.so"
+linux.release.arm64 = "res://webrtc/lib/libwebrtc_native.linux.template_release.arm64.so"
+linux.release.arm32 = "res://webrtc/lib/libwebrtc_native.linux.template_release.arm32.so"
 macos.release = "res://webrtc/lib/libwebrtc_native.macos.template_release.universal.dylib"
 windows.release.x86_64 = "res://webrtc/lib/libwebrtc_native.windows.template_release.x86_64.dll"
 windows.release.x86_32 = "res://webrtc/lib/libwebrtc_native.windows.template_release.x86_32.dll"

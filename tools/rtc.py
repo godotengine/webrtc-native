@@ -3,6 +3,7 @@ import os
 
 def rtc_cmake_config(env):
     config = {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo" if env["debug_symbols"] else "Release",
         "USE_NICE": 0,
         "NO_WEBSOCKET": 1,
         "NO_EXAMPLES": 1,
@@ -17,7 +18,7 @@ def rtc_cmake_config(env):
     return config
 
 
-def build_library(env):
+def build_library(env, ssl):
     if env["platform"] == "windows":
         env.PrependUnique(LIBS=["iphlpapi", "bcrypt"])
 
@@ -25,11 +26,10 @@ def build_library(env):
 
     rtc_env = env.Clone()
     rtc_targets = [env.Dir(env["RTC_BUILD"])] + env["RTC_LIBS"]
-    rtc_sources = [env.Dir(env["RTC_SOURCE"])]
-    rtc_env.Append(CMAKECONFFLAGS=["'-D%s=%s'" % it for it in rtc_cmake_config(env).items()])
+    rtc_sources = [env.Dir(env["RTC_SOURCE"])] + ssl
+    rtc_env.Append(CMAKECONFFLAGS=["-D%s=%s" % it for it in rtc_cmake_config(env).items()])
     rtc_env.Append(CMAKEBUILDFLAGS=["-t", "datachannel-static"])
-    rtc = rtc_env.CMake(rtc_targets, rtc_sources, CMAKEBUILDTYPE=env["RTC_BUILD_TYPE"])
-    rtc_env.Depends(rtc, rtc_env["SSL_LIBS"])
+    rtc = rtc_env.CMake(rtc_targets, rtc_sources)
     return rtc
 
 
@@ -39,10 +39,7 @@ def exists(env):
 
 def generate(env):
     env["RTC_SOURCE"] = env.Dir("#thirdparty/libdatachannel").abspath
-    env["RTC_BUILD_TYPE"] = "RelWithDebInfo" if env["debug_symbols"] else "Release"
-    env["RTC_BUILD"] = env.Dir(
-        "#bin/thirdparty/libdatachannel/{}/{}/{}".format(env["platform"], env["arch"], env["RTC_BUILD_TYPE"])
-    ).abspath
+    env["RTC_BUILD"] = env.Dir("#bin/thirdparty/libdatachannel/{}/{}".format(env["platform"], env["arch"])).abspath
     env["RTC_INCLUDE"] = env["RTC_SOURCE"] + "/include"
     lib_ext = ".a"
     lib_prefix = "lib"

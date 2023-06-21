@@ -13,6 +13,9 @@ def ssl_platform_target(env):
         targets = {
             "x86_32": "linux-x86",
             "x86_64": "linux-x86_64",
+            "arm64": "linux-aarch64",
+            "arm32": "linux-armv4",
+            "rv64": "linux64-riscv64",
         }
     elif platform == "android":
         targets = {
@@ -56,7 +59,7 @@ def ssl_platform_target(env):
     return target
 
 
-def ssl_default_options(env):
+def ssl_platform_options(env):
     ssl_config_options = [
         "no-ssl2",
         "no-ssl3",
@@ -70,13 +73,12 @@ def ssl_default_options(env):
     return ssl_config_options
 
 
-def ssl_platform_config(env):
-    opts = ssl_default_options(env)
-    target = ssl_platform_target(env)
+def ssl_platform_flags(env):
     args = []
-    if env["platform"] == "android" and env.get("android_api_level", ""):
-        api = int(env["android_api_level"])
-        args.append("-D__ANDROID_API__=%s" % api)
+    if env["platform"] == "android":
+        if env.get("android_api_level", ""):
+            api = int(env["android_api_level"])
+            args.append("-D__ANDROID_API__=%s" % api)
     elif env["platform"] == "macos":
         # OSXCross toolchain setup.
         if sys.platform != "darwin" and "OSXCROSS_ROOT" in os.environ:
@@ -90,7 +92,26 @@ def ssl_platform_config(env):
                 "x86_64": "--cross-compile-prefix=x86_64-w64-mingw32-",
             }
             args.append(mingw_prefixes[env["arch"]])
-    return opts + [target] + args
+    return args
+
+
+def ssl_configure_args(env):
+    if env.get("openssl_configure_options", ""):
+        opts = SCons.Util.CLVar(env["openssl_configure_options"])
+    else:
+        opts = ssl_platform_options(env)
+
+    if env.get("openssl_configure_target", ""):
+        target = [env["openssl_configure_target"]]
+    else:
+        target = [ssl_platform_target(env)]
+
+    if env.get("openssl_configure_flags", ""):
+        flags = SCons.Util.CLVar(env["openssl_configure_flags"])
+    else:
+        flags = ssl_platform_flags(env)
+
+    return opts + target + flags
 
 
 def ssl_emitter(target, source, env):
@@ -158,7 +179,19 @@ def ssl_generator(target, source, env, for_signature):
 def options(opts):
     opts.Add(PathVariable("openssl_source", "Path to the openssl sources.", "thirdparty/openssl"))
     opts.Add("openssl_build", "Destination path of the openssl build.", "bin/thirdparty/openssl")
-    opts.Add(BoolVariable("openssl_debug", "Make a debug build of OpenSSL.", False))
+    opts.Add(
+        "openssl_configure_options",
+        "OpenSSL configure options override. Will use a reasonable default if not specified.",
+        "",
+    )
+    opts.Add(
+        "openssl_configure_target", "OpenSSL configure target override, will be autodetected if not specified.", ""
+    )
+    opts.Add(
+        "openssl_configure_flags",
+        "OpenSSL configure compiler flags override. Will be autodetected if not specified.",
+        "",
+    )
 
 
 def exists(env):
@@ -175,10 +208,7 @@ def generate(env):
             env["ENV"]["ANDROID_NDK_ROOT"] = env.get("ANDROID_NDK_ROOT", os.environ.get("ANDROID_NDK_ROOT", ""))
 
     env["SSL_SOURCE"] = env.Dir(env["openssl_source"]).abspath
-    env["SSL_BUILD"] = env.Dir(
-        env["openssl_build"]
-        + "/{}/{}/{}".format(env["platform"], env["arch"], "debug" if env["openssl_debug"] else "release")
-    ).abspath
+    env["SSL_BUILD"] = env.Dir(env["openssl_build"] + "/{}/{}".format(env["platform"], env["arch"])).abspath
     env["SSL_INSTALL"] = env.Dir(env["SSL_BUILD"] + "/dest").abspath
     env["SSL_INCLUDE"] = env.Dir(env["SSL_INSTALL"] + "/include").abspath
     lib_ext = ".lib" if env.get("is_msvc", False) else ".a"
@@ -188,11 +218,11 @@ def generate(env):
 
     # Configure action
     env["PERL"] = env.get("PERL", "perl")
-    env["_ssl_platform_config"] = ssl_platform_config
-    env["SSLPLATFORMCONFIG"] = "${_ssl_platform_config(__env__)}"
+    env["_ssl_configure_args"] = ssl_configure_args
+    env["SSLPLATFORMCONFIG"] = "${_ssl_configure_args(__env__)}"
     env["SSLCONFFLAGS"] = SCons.Util.CLVar("")
     # fmt: off
-    env["SSLCONFIGCOM"] = "cd ${TARGET.dir} && $PERL -- ${SOURCE.abspath} --prefix=$SSL_INSTALL --openssldir=$SSL_INSTALL $SSLPLATFORMCONFIG $SSLCONFFLAGS"
+    env["SSLCONFIGCOM"] = 'cd ${TARGET.dir} && $PERL -- ${SOURCE.abspath} --prefix="${SSL_INSTALL}" --openssldir="${SSL_INSTALL}" $SSLPLATFORMCONFIG $SSLCONFFLAGS'
     # fmt: on
 
     # Build action
