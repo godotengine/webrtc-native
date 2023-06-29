@@ -101,6 +101,18 @@ def cmake_generator(target, source, env, for_signature):
     ]
 
 
+def cmake_build(env, target_dir, source_dir, cmake_outputs=[], cmake_targets=[], cmake_options=[], dependencies=[]):
+    cmake_env = env.Clone()
+    target = env.Dir("{}/{}/{}".format(target_dir, env["platform"], env["arch"]))
+    source = env.Dir(source_dir)
+    builder_targets = [target] + [str(target) + "/" + f for f in cmake_outputs]
+    builder_sources = [source] + dependencies
+    cmake_env.Append(CMAKECONFFLAGS=["-D%s=%s" % it for it in cmake_options.items()])
+    if len(cmake_targets) > 0:
+        cmake_env.Append(CMAKEBUILDFLAGS=["-t"] + [t for t in cmake_targets])
+    return cmake_env.CMake(builder_targets, builder_sources)
+
+
 def options(opts):
     opts.Add("cmake_default_flags", "Default CMake platform flags override, will be autodetected if not specified.", "")
 
@@ -120,3 +132,4 @@ def generate(env):
     env["CMAKEBUILDFLAGS"] = SCons.Util.CLVar("")
     env["CMAKEBUILDCOM"] = "$CMAKE --build ${TARGET.dir} $CMAKEBUILDFLAGS -j$CMAKEBUILDJOBS"
     env["BUILDERS"]["CMake"] = SCons.Builder.Builder(generator=cmake_generator, emitter=cmake_emitter)
+    env.AddMethod(cmake_build, "CMakeBuild")
