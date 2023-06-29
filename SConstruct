@@ -57,6 +57,10 @@ if env["godot_version"] == "3":
     if env["platform"] == "osx":
         env["platform"] = "macos"  # compatibility with old osx name
         ARGUMENTS["platform"] = "macos"
+        env["CC"] = "clang"  # CC is not set in 3.x and can result in it being "gcc".
+
+    if env["platform"] == "ios":
+        env["ios_min_version"] = "11.0"
 
     # Normalize suffix
     if env["platform"] in ["windows", "linux"]:
