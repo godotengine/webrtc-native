@@ -118,6 +118,18 @@ if env["platform"] == "macos" and os.environ.get("OSXCROSS_ROOT", ""):
     if env["macos_deployment_target"] != "default":
         env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = env["macos_deployment_target"]
 
+# Patch linux flags to statically link libgcc and libstdc++
+if env["platform"] == "linux":
+    env.Append(
+        LINKFLAGS=[
+            "-Wl,--no-undefined",
+            "-static-libgcc",
+            "-static-libstdc++",
+        ]
+    )
+    # And add some linux dependencies.
+    env.Append(LIBS=["pthread", "dl"])
+
 opts.Update(env)
 
 target = env["target"]
