@@ -1,0 +1,29 @@
+diff --git a/godot-cpp/SConstruct b/godot-cpp/SConstruct
+index 27ee137..32b425e 100644
+--- a/godot-cpp/SConstruct
++++ b/godot-cpp/SConstruct
+@@ -54,6 +54,8 @@ else:
+ # Default tools with no platform defaults to gnu toolchain.
+ # We apply platform specific toolchains via our custom tools.
+ env = Environment(tools=["default"], PLATFORM="")
++# Allows us to use Godot buildroot toolchain
++env.PrependENVPath("PATH", os.getenv("PATH"))
+
+ # Default num_jobs to local cpu count if not user specified.
+ # SCons has a peculiarity where user-specified options won't be overridden
+
+diff --git a/godot-cpp-3.x/SConstruct b/godot-cpp-3.x/SConstruct
+index f653d54..6f40377 100644
+--- a/godot-cpp-3.x/SConstruct
++++ b/godot-cpp-3.x/SConstruct
+@@ -194,6 +194,9 @@ if host_platform == "windows" and env["platform"] != "android":
+
+     opts.Update(env)
+
++# Allows us to use Godot buildroot toolchain
++env.PrependENVPath("PATH", os.getenv("PATH"))
++
+ # Require C++14
+ if host_platform == "windows" and env["platform"] == "windows" and not env["use_mingw"]:
+     # MSVC
+
