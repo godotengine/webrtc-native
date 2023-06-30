@@ -177,15 +177,23 @@ jobs:
           scons --version
           cmake --version
 
-      - name: Compile Extension - template_debug - ${{ matrix.platform }} - ${{ matrix.arch }}
+      - name: Compile Extension (4.1+) - template_debug - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=template_debug
+          scons target=template_debug godot_version=4.1
 
-      - name: Compile Extension - template_release - ${{ matrix.platform }} - ${{ matrix.arch }}
+      - name: Compile Extension (4.1+) - template_release - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=template_release
+          scons target=template_release godot_version=4.1
 
-      - name: Compile GDNative - release ${{ matrix.platform }} - ${{ matrix.arch }}
+      - name: Compile Extension (4.0) - template_debug - ${{ matrix.platform }} - ${{ matrix.arch }}
+        run: |
+          scons target=template_debug godot_version=4.0
+
+      - name: Compile Extension (4.0) - template_release - ${{ matrix.platform }} - ${{ matrix.arch }}
+        run: |
+          scons target=template_release godot_version=4.0
+
+      - name: Compile GDNative (3.5+) - release ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
           scons target=release generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
 
@@ -226,15 +234,21 @@ jobs:
         run: |
           mkdir release
 
-          VERSION="extension" TYPE="webrtc" ./misc/scripts/package_release.sh
+          VERSION="extension-4.1" TYPE="webrtc" ./misc/scripts/package_release.sh
+          VERSION="extension-4.0" TYPE="webrtc" ./misc/scripts/package_release.sh
           VERSION="gdnative" TYPE="webrtc" ./misc/scripts/package_release.sh
 
           ls -R release
 
       - uses: actions/upload-artifact@v3
         with:
-          name: godot-webrtc-extension
-          path: release/*-extension-*.zip
+          name: godot-webrtc-extension-4.1
+          path: release/*-extension-4.1-*.zip
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: godot-webrtc-extension-4.0
+          path: release/*-extension-4.0-*.zip
 
       - uses: actions/upload-artifact@v3
         with:

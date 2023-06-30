@@ -21,13 +21,19 @@ $ git submodule update --init --recursive
 
 ### Compiling the extension.
 
-To build the GDExtension version of the plugin (Godot 4.0) run the following command from the `webrtc-native` folder:
+To build the GDExtension version of the plugin (Godot 4.1+) run the following command from the `webrtc-native` folder:
 
 ```
 $ scons platform=<your platform>
 ```
 
 This will build all the required dependencies into a single shared library.
+
+To build the "legacy" GDExtension version of the plugin (Godot 4.0) run the following command instead:
+
+```
+$ scons platform=<your platform> godot_version=4.0
+```
 
 To build the GDNative version of the plugin (Godot 3.x) run the following command instead:
 
