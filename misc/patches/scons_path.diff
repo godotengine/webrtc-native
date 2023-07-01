@@ -1,7 +1,7 @@
-diff --git a/godot-cpp/SConstruct b/godot-cpp/SConstruct
+diff --git a/godot-cpp-4.0/SConstruct b/godot-cpp-4.0/SConstruct
 index 27ee137..32b425e 100644
---- a/godot-cpp/SConstruct
-+++ b/godot-cpp/SConstruct
+--- a/godot-cpp-4.0/SConstruct
++++ b/godot-cpp-4.0/SConstruct
 @@ -54,6 +54,8 @@ else:
  # Default tools with no platform defaults to gnu toolchain.
  # We apply platform specific toolchains via our custom tools.

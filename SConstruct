@@ -18,7 +18,7 @@ def replace_flags(flags, replaces):
 
 env = Environment()
 opts = Variables(["customs.py"], ARGUMENTS)
-opts.Add(EnumVariable("godot_version", "The Godot target version", "4", ["3", "4"]))
+opts.Add(EnumVariable("godot_version", "The Godot target version", "4.1", ["3", "4.0", "4.1"]))
 opts.Update(env)
 
 # Minimum target platform versions.
@@ -96,6 +96,8 @@ if env["godot_version"] == "3":
         elif not env["use_mingw"]:
             # Mark as MSVC build (would have failed to build the library otherwise).
             env["is_msvc"] = True
+elif env["godot_version"] == "4.0":
+    env = SConscript("godot-cpp-4.0/SConstruct").Clone()
 else:
     env = SConscript("godot-cpp/SConstruct").Clone()
 
@@ -135,8 +137,10 @@ opts.Update(env)
 target = env["target"]
 if env["godot_version"] == "3":
     result_path = os.path.join("bin", "gdnative", "webrtc" if env["target"] == "release" else "webrtc_debug")
+elif env["godot_version"] == "4.0":
+    result_path = os.path.join("bin", "extension-4.0", "webrtc")
 else:
-    result_path = os.path.join("bin", "extension", "webrtc")
+    result_path = os.path.join("bin", "extension-4.1", "webrtc")
 
 # Our includes and sources
 env.Append(CPPPATH=["src/"])
@@ -148,12 +152,14 @@ sources.append(
         "src/WebRTCLibPeerConnection.cpp",
     ]
 )
-if env["godot_version"] == "4":
-    sources.append("src/init_gdextension.cpp")
-else:
+if env["godot_version"] == "3":
     env.Append(CPPDEFINES=["GDNATIVE_WEBRTC"])
     sources.append("src/init_gdnative.cpp")
     add_sources(sources, "src/net/", "cpp")
+else:
+    sources.append("src/init_gdextension.cpp")
+    if env["godot_version"] == "4.0":
+        env.Append(CPPDEFINES=["GDEXTENSION_WEBRTC_40"])
 
 # Add our build tools
 for tool in ["openssl", "cmake", "rtc"]:
@@ -187,6 +193,10 @@ if env["godot_version"] == "3":
         },
     )
 else:
-    extfile = env.InstallAs(os.path.join(result_path, "webrtc.gdextension"), "misc/webrtc.gdextension")
+    extfile = env.Substfile(
+        os.path.join(result_path, "webrtc.gdextension"),
+        "misc/webrtc.gdextension",
+        SUBST_DICT={"{GODOT_VERSION}": env["godot_version"]},
+    )
 
 Default(extfile)

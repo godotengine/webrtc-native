@@ -10,6 +10,7 @@ TYPE=${TYPE:-"webrtc"}
 
 mkdir -p ${DESTINATION}
 ls -R ${DESTINATION}
+ls -R ${ARTIFACTS}
 
 DESTDIR="${DESTINATION}/${VERSION}/${TYPE}"
 
@@ -18,10 +19,10 @@ mkdir -p ${DESTDIR}/lib
 find "${ARTIFACTS}" -wholename "*/${VERSION}/${TYPE}/lib/*" | xargs cp -t "${DESTDIR}/lib/"
 find "${ARTIFACTS}" -wholename "*/LICENSE*" | xargs cp -t "${DESTDIR}/"
 
-if [ $VERSION = "extension" ]; then
-    find "${ARTIFACTS}" -wholename "*/${VERSION}/${TYPE}/${TYPE}.gdextension" | head -n 1 | xargs cp -t "${DESTDIR}/"
-else
+if [ $VERSION = "gdnative" ]; then
     find "${ARTIFACTS}" -wholename "*/${VERSION}/${TYPE}/${TYPE}.tres" | head -n 1 | xargs cp -t "${DESTDIR}/"
+else
+    find "${ARTIFACTS}" -wholename "*/${VERSION}/${TYPE}/${TYPE}.gdextension" | head -n 1 | xargs cp -t "${DESTDIR}/"
 fi
 
 CURDIR=$(pwd)

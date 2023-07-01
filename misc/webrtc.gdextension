@@ -1,6 +1,7 @@
 [configuration]
 
 entry_symbol = "webrtc_extension_init"
+compatibility_minimum = {GODOT_VERSION}
 
 [libraries]
 
