@@ -155,6 +155,7 @@ jobs:
       - name: Install Linux build dependencies
         if: ${{ matrix.platform == 'linux' }}
         run: |
+          sudo apt-get update
           sudo apt-get install build-essential gcc-multilib g++-multilib wget
           if [ ! -f ${{ matrix.buildroot }}-godot-linux-gnu_sdk-buildroot.tar.bz2 ]; then
             wget https://downloads.tuxfamily.org/godotengine/toolchains/linux/${{ matrix.buildroot }}-godot-linux-gnu_sdk-buildroot.tar.bz2
