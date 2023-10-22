@@ -8,7 +8,7 @@ readability.
 ## json
 
 - Upstream: https://github.com/nlohmann/json
-- Version: 3.10.5 (4f8fba14066156b73f1189a2b8bd568bde5284c5, 2022)
+- Version: 3.11.2 (bc889afb4c5bf1c0d8ee29ef35eaaf4c8bef8a5d, 2022)
 - License: MIT
 
 Module location:
@@ -19,7 +19,7 @@ Module location:
 ## libdatachannel
 
 - Upstream: https://github.com/paullouisageneau/libdatachannel
-- Version: 0.18.6 (bf8d8bd86afaffed89ba763107bcd8957c8cc319, 2023)
+- Version: 0.19.3 (2cea8358c7d8381c9af2caf06cee0f72ebb91b1b, 2023)
 - License: MPL 2.0
 
 Module location:
@@ -30,7 +30,7 @@ Module location:
 # libjuice
 
 - Upstream: https://github.com/paullouisageneau/libjuice
-- Version: 1.2.3 (8c23cc88c6d41e5ccbc44ea0ad3d79b22cf02361, 2023)
+- Version: 1.3.3 (5f753cad49059cea4eb492eb5c11a3bbb4dd6324, 2023)
 - License: MPL 2.0
 
 Module location:
@@ -63,8 +63,8 @@ Module location:
 ## plog
 
 - Upstream: https://github.com/SergiusTheBest/plog
-- Version: git (d8461e9d473e59fbcc1f79eee021550dcf81e618, 2021)
-- License: MPL 2.0
+- Version: 1.1.10 (e21baecd4753f14da64ede979c5a19302618b752, 2023)
+- License: MIT
 
 Module location:
 
@@ -74,7 +74,7 @@ Module location:
 ## usrsctp
 
 - Upstream: https://github.com/sctplab/usrsctp
-- Version: git (7c31bd35c79ba67084ce029511193a19ceb97447, 2021)
+- Version: git (5ca29ac7d8055802c7657191325c06386640ac24, 2023)
 - License: BSD-3-Clause
 
 Module location:
