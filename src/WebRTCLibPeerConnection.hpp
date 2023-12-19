@@ -67,6 +67,10 @@ private:
 protected:
 	static void _bind_methods() {}
 
+	godot::String _to_string() const {
+		return "WebRTCLibPeerConnection";
+	}
+
 public:
 	static void _register_methods() {}
 	static void initialize_signaling();
