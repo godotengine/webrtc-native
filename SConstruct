@@ -177,7 +177,19 @@ env.Depends(sources, ssl + rtc)
 
 # Make the shared library
 result_name = "libwebrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
-library = env.SharedLibrary(target=os.path.join(result_path, "lib", result_name), source=sources)
+if env["godot_version"] != "3" and env["platform"] == "macos":
+    framework_path = os.path.join(
+        result_path, "lib", "libwebrtc_native.macos.{}.{}.framework".format(env["target"], env["arch"])
+    )
+    library_file = env.SharedLibrary(target=os.path.join(framework_path, result_name), source=sources)
+    plist_file = env.Substfile(
+        os.path.join(framework_path, "Resources", "Info.plist"),
+        "misc/dist/macos/Info.plist",
+        SUBST_DICT={"{LIBRARY_NAME}": result_name, "{DISPLAY_NAME}": "libwebrtc_native" + env["suffix"]},
+    )
+    library = [library_file, plist_file]
+else:
+    library = env.SharedLibrary(target=os.path.join(result_path, "lib", result_name), source=sources)
 Default(library)
 
 # GDNativeLibrary

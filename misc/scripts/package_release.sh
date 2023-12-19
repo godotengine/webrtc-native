@@ -16,7 +16,7 @@ DESTDIR="${DESTINATION}/${VERSION}/${TYPE}"
 
 mkdir -p ${DESTDIR}/lib
 
-find "${ARTIFACTS}" -wholename "*/${VERSION}/${TYPE}/lib/*" | xargs cp -t "${DESTDIR}/lib/"
+find "${ARTIFACTS}" -maxdepth 5 -wholename "*/${VERSION}/${TYPE}/lib/*" | xargs cp -r -t "${DESTDIR}/lib/"
 find "${ARTIFACTS}" -wholename "*/LICENSE*" | xargs cp -t "${DESTDIR}/"
 
 if [ $VERSION = "gdnative" ]; then
