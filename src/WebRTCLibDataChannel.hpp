@@ -74,6 +74,10 @@ private:
 protected:
 	static void _bind_methods() {}
 
+	godot::String _to_string() const {
+		return "WebRTCLibDataChannel";
+	}
+
 public:
 	static WebRTCLibDataChannel *new_data_channel(std::shared_ptr<rtc::DataChannel> p_channel, bool p_negotiated);
 
