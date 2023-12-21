@@ -125,6 +125,8 @@ def build_openssl(env, jobs=None):
         env.Prepend(LIBPATH=[env["SSL_BUILD"]])
         if env["platform"] == "windows":
             env.PrependUnique(LIBS=["crypt32", "ws2_32", "advapi32", "user32"])
+        if env["platform"] == "linux":
+            env.PrependUnique(LIBS=["pthread", "dl"])
         env.Prepend(LIBS=env["SSL_LIBS"])
         return [env["SSL_CRYPTO_LIBRARY"], env["SSL_LIBRARY"]]
 
@@ -169,6 +171,8 @@ def build_openssl(env, jobs=None):
     env.Prepend(LIBPATH=[env["SSL_BUILD"]])
     if env["platform"] == "windows":
         env.PrependUnique(LIBS=["crypt32", "ws2_32", "advapi32", "user32"])
+    if env["platform"] == "linux":
+        env.PrependUnique(LIBS=["pthread", "dl"])
     env.Prepend(LIBS=env["SSL_LIBS"])
 
     return ssl

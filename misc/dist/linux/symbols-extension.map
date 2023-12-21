@@ -1,0 +1,6 @@
+{
+    global:
+        webrtc_extension_init;
+    local:
+        *;
+};
