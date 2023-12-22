@@ -37,6 +37,8 @@ def build_library(env, ssl):
     # Configure env.
     if env["platform"] == "windows":
         env.PrependUnique(LIBS=["iphlpapi", "bcrypt"])
+    if env["platform"] == "linux":
+        env.PrependUnique(LIBS=["pthread"])
     env.Prepend(LIBS=list(filter(lambda f: str(f).endswith(lib_ext), rtc)))
     env.Append(CPPPATH=["#thirdparty/libdatachannel/include"])
 

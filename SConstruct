@@ -120,18 +120,6 @@ if env["platform"] == "macos" and os.environ.get("OSXCROSS_ROOT", ""):
     if env["macos_deployment_target"] != "default":
         env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = env["macos_deployment_target"]
 
-# Patch linux flags to statically link libgcc and libstdc++
-if env["platform"] == "linux":
-    env.Append(
-        LINKFLAGS=[
-            "-Wl,--no-undefined",
-            "-static-libgcc",
-            "-static-libstdc++",
-        ]
-    )
-    # And add some linux dependencies.
-    env.Append(LIBS=["pthread", "dl"])
-
 opts.Update(env)
 
 target = env["target"]
@@ -175,6 +163,24 @@ rtc = env.BuildLibDataChannel(ssl)
 # but it's better to be safe in case of indirect inclusions by one of our other dependencies.
 env.Depends(sources, ssl + rtc)
 
+# We want to statically link against libstdc++ on Linux to maximize compatibility, but we must restrict the exported
+# symbols using a GCC version script, or we might end up overriding symbols from other libraries.
+# Using "-fvisibility=hidden" will not work, since libstdc++ explicitly exports its symbols.
+symbols_file = None
+if env["platform"] == "linux":
+    if env["godot_version"] == "3":
+        symbols_file = env.File("misc/dist/linux/symbols-gdnative.map")
+    else:
+        symbols_file = env.File("misc/dist/linux/symbols-extension.map")
+    env.Append(
+        LINKFLAGS=[
+            "-Wl,--no-undefined,--version-script=" + symbols_file.abspath,
+            "-static-libgcc",
+            "-static-libstdc++",
+        ]
+    )
+    env.Depends(sources, symbols_file)
+
 # Make the shared library
 result_name = "libwebrtc_native{}{}".format(env["suffix"], env["SHLIBSUFFIX"])
 if env["godot_version"] != "3" and env["platform"] == "macos":
@@ -190,6 +196,7 @@ if env["godot_version"] != "3" and env["platform"] == "macos":
     library = [library_file, plist_file]
 else:
     library = env.SharedLibrary(target=os.path.join(result_path, "lib", result_name), source=sources)
+
 Default(library)
 
 # GDNativeLibrary

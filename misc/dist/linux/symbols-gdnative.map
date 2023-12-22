@@ -1,0 +1,9 @@
+{
+    global:
+        godot_gdnative_singleton;
+        godot_gdnative_init;
+        godot_gdnative_terminate;
+        godot_nativescript_init;
+    local:
+        *;
+};
