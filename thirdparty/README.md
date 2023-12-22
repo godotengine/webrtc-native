@@ -19,7 +19,7 @@ Module location:
 ## libdatachannel
 
 - Upstream: https://github.com/paullouisageneau/libdatachannel
-- Version: 0.19.3 (2cea8358c7d8381c9af2caf06cee0f72ebb91b1b, 2023)
+- Version: 0.19.4 (cb77870cde2c78007a336eae3aacd234dccda161, 2023)
 - License: MPL 2.0
 
 Module location:
@@ -52,7 +52,7 @@ Module location:
 ## openssl
 
 - Upstream: git://git.openssl.org/openssl.git
-- Version: 3.0.11 (6ba3884c3235e1bb474b379026087f8216afacf4, 2023)
+- Version: 3.0.12 (c3cc0f1386b0544383a61244a4beeb762b67498f, 2023)
 - License: Apache 2.0
 
 Module location:
