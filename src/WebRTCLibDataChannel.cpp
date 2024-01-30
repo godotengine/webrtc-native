@@ -143,12 +143,12 @@ int32_t WebRTCLibDataChannel::_get_id() const {
 
 int32_t WebRTCLibDataChannel::_get_max_packet_life_time() const {
 	ERR_FAIL_COND_V(!channel, 0);
-	return channel->reliability().type == rtc::Reliability::Type::Timed ? std::get<std::chrono::milliseconds>(channel->reliability().rexmit).count() : -1;
+	return channel->reliability().maxPacketLifeTime.has_value() ? channel->reliability().maxPacketLifeTime.value().count() : -1;
 }
 
 int32_t WebRTCLibDataChannel::_get_max_retransmits() const {
 	ERR_FAIL_COND_V(!channel, 0);
-	return channel->reliability().type == rtc::Reliability::Type::Rexmit ? std::get<int>(channel->reliability().rexmit) : -1;
+	return channel->reliability().maxRetransmits.value_or(-1);
 }
 
 String WebRTCLibDataChannel::_get_protocol() const {

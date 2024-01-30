@@ -96,11 +96,9 @@ Error WebRTCLibPeerConnection::_parse_channel_config(rtc::DataChannelInit &r_con
 	// Channels cannot be both time-constrained and retry-constrained.
 	ERR_FAIL_COND_V(p_dict.has("maxPacketLifeTime") && p_dict.has("maxRetransmits"), ERR_INVALID_PARAMETER);
 	if (p_dict.has("maxPacketLifeTime")) {
-		r_config.reliability.type = rtc::Reliability::Type::Timed;
-		r_config.reliability.rexmit = std::chrono::milliseconds(p_dict["maxPacketLifeTime"].operator int32_t());
+		r_config.reliability.maxPacketLifeTime = std::chrono::milliseconds(p_dict["maxPacketLifeTime"].operator int32_t());
 	} else if (p_dict.has("maxRetransmits")) {
-		r_config.reliability.type = rtc::Reliability::Type::Rexmit;
-		r_config.reliability.rexmit = p_dict["maxRetransmits"].operator int32_t();
+		r_config.reliability.maxRetransmits = p_dict["maxRetransmits"].operator int32_t();
 	}
 	if (p_dict.has("ordered") && p_dict["ordered"].operator bool() == false) {
 		r_config.reliability.unordered = true;
