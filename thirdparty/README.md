@@ -8,7 +8,7 @@ readability.
 ## json
 
 - Upstream: https://github.com/nlohmann/json
-- Version: 3.11.2 (bc889afb4c5bf1c0d8ee29ef35eaaf4c8bef8a5d, 2022)
+- Version: 3.11.3 (9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03, 2023)
 - License: MIT
 
 Module location:
@@ -19,7 +19,7 @@ Module location:
 ## libdatachannel
 
 - Upstream: https://github.com/paullouisageneau/libdatachannel
-- Version: 0.19.4 (cb77870cde2c78007a336eae3aacd234dccda161, 2023)
+- Version: 0.20.1 (7841d9f34cf9bd735958ae203a2536c14240c8a5, 2024)
 - License: MPL 2.0
 
 Module location:
@@ -30,7 +30,7 @@ Module location:
 # libjuice
 
 - Upstream: https://github.com/paullouisageneau/libjuice
-- Version: 1.3.3 (5f753cad49059cea4eb492eb5c11a3bbb4dd6324, 2023)
+- Version: 1.3.4 (0b6f958baba55e1a4eb31ec2137f62b2e07382ae, 2024)
 - License: MPL 2.0
 
 Module location:
@@ -52,7 +52,7 @@ Module location:
 ## openssl
 
 - Upstream: git://git.openssl.org/openssl.git
-- Version: 3.0.12 (c3cc0f1386b0544383a61244a4beeb762b67498f, 2023)
+- Version: 3.0.13 (85cf92f55d9e2ac5aacf92bedd33fb890b9f8b4c, 2024)
 - License: Apache 2.0
 
 Module location:
@@ -74,7 +74,7 @@ Module location:
 ## usrsctp
 
 - Upstream: https://github.com/sctplab/usrsctp
-- Version: git (5ca29ac7d8055802c7657191325c06386640ac24, 2023)
+- Version: git (ebb18adac6501bad4501b1f6dccb67a1c85cc299, 2023)
 - License: BSD-3-Clause
 
 Module location:
