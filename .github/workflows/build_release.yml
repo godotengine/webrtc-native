@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -122,12 +122,12 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
       - name: Setup Godot build cache
-        uses: ./godot-cpp/.github/actions/godot-cache
+        uses: ./.github/actions/godot-cache
         with:
           cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
@@ -146,7 +146,7 @@ jobs:
 
       - name: Setup Linux buildroot toolchain cache
         if: ${{ matrix.platform == 'linux' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ${{ matrix.buildroot }}-godot-linux-gnu_sdk-buildroot.tar.bz2
@@ -165,7 +165,7 @@ jobs:
           patch -p1 < misc/patches/scons_path.diff
 
       - name: Set up Python 3.x
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
           architecture: 'x64'
@@ -198,7 +198,7 @@ jobs:
         run: |
           scons target=release generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
@@ -210,11 +210,11 @@ jobs:
     needs: build
     runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
@@ -241,17 +241,17 @@ jobs:
 
           ls -R release
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: godot-webrtc-extension-4.1
           path: release/*-extension-4.1-*.zip
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: godot-webrtc-extension-4.0
           path: release/*-extension-4.0-*.zip
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: godot-webrtc-gdnative
           path: release/*-gdnative-*.zip
