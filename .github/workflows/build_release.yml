@@ -76,18 +76,32 @@ jobs:
           # Linux
           - platform: linux
             arch: 'x86_32'
-            buildroot: 'i686'
+            buildroot: 'i686-godot-linux-gnu_sdk-buildroot'
             gdnative_flags: 'bits=32'
             sconsflags: ''
             os: 'ubuntu-20.04'
             cache-name: linux-x86_32
           - platform: linux
             arch: 'x86_64'
-            buildroot: 'x86_64'
+            buildroot: 'x86_64-godot-linux-gnu_sdk-buildroot'
             gdnative_flags: 'bits=64'
             sconsflags: ''
             os: 'ubuntu-20.04'
             cache-name: linux-x86_64
+          - platform: linux
+            arch: 'arm32'
+            buildroot: 'arm-godot-linux-gnueabihf_sdk-buildroot'
+            gdnative_flags: 'bits=32'
+            sconsflags: ''
+            os: 'ubuntu-20.04'
+            cache-name: linux-arm32
+          - platform: linux
+            arch: 'arm64'
+            buildroot: 'aarch64-godot-linux-gnu_sdk-buildroot'
+            gdnative_flags: 'bits=64'
+            sconsflags: ''
+            os: 'ubuntu-20.04'
+            cache-name: linux-arm64
 
           # macOS
           - platform: macos
@@ -144,25 +158,19 @@ jobs:
           dpkg -l | grep ii | grep mingw
           update-alternatives --get-selections | grep mingw
 
-      - name: Setup Linux buildroot toolchain cache
-        if: ${{ matrix.platform == 'linux' }}
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ matrix.buildroot }}-godot-linux-gnu_sdk-buildroot.tar.bz2
-          key: linux-${{ matrix.buildroot }}-buildroot
-
       - name: Install Linux build dependencies
         if: ${{ matrix.platform == 'linux' }}
         run: |
           sudo apt-get update
           sudo apt-get install build-essential gcc-multilib g++-multilib wget
-          if [ ! -f ${{ matrix.buildroot }}-godot-linux-gnu_sdk-buildroot.tar.bz2 ]; then
-            wget https://downloads.tuxfamily.org/godotengine/toolchains/linux/${{ matrix.buildroot }}-godot-linux-gnu_sdk-buildroot.tar.bz2
-          fi
-          tar -xjf ${{ matrix.buildroot }}-godot-linux-gnu_sdk-buildroot.tar.bz2
-          echo "$GITHUB_WORKSPACE/${{ matrix.buildroot }}-godot-linux-gnu_sdk-buildroot/bin" >> $GITHUB_PATH
-          patch -p1 < misc/patches/scons_path.diff
+
+      - name: Setup Linux buildroot toolchain cache
+        if: ${{ matrix.platform == 'linux' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ matrix.buildroot }}.tar.bz2
+          key: linux-${{ matrix.buildroot }}-buildroot
 
       - name: Set up Python 3.x
         uses: actions/setup-python@v5
@@ -174,6 +182,22 @@ jobs:
         run: |
           python -c "import sys; print(sys.version)"
           python -m pip install scons
+
+      - name: Setup Linux toolchains
+        if: ${{ matrix.platform == 'linux' }}
+        run: |
+          if [ ! -f ${{ matrix.buildroot }}.tar.bz2 ]; then
+            wget https://downloads.tuxfamily.org/godotengine/toolchains/linux/${{ matrix.buildroot }}.tar.bz2
+          fi
+          tar -xjf ${{ matrix.buildroot }}.tar.bz2
+          ${{ matrix.buildroot }}/relocate-sdk.sh
+          echo "$GITHUB_WORKSPACE/${{ matrix.buildroot }}/bin" >> $GITHUB_PATH
+          echo "PKG_CONFIG=$GITHUB_WORKSPACE/${{ matrix.buildroot }}/share/pkgconfig/" >> $GITHUB_ENV
+          patch -p1 < misc/patches/scons_path.diff
+          patch -p1 < misc/patches/gdnantive_arm_warnings.diff
+
+      - name: Print tools versions
+        run: |
           python --version
           scons --version
           cmake --version

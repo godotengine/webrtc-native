@@ -12,7 +12,11 @@ def add_sources(sources, dirpath, extension):
 
 def replace_flags(flags, replaces):
     for k, v in replaces.items():
-        if k in flags:
+        if k not in flags:
+            continue
+        if v is None:
+            flags.remove(k)
+        else:
             flags[flags.index(k)] = v
 
 
@@ -33,11 +37,11 @@ if env["godot_version"] == "3":
     if "platform" in ARGUMENTS and ARGUMENTS["platform"] == "macos":
         ARGUMENTS["platform"] = "osx"  # compatibility with old osx name
 
-    env = SConscript("godot-cpp-3.x/SConstruct")
+    cpp_env = SConscript("godot-cpp-3.x/SConstruct")
 
     # Patch base env
     replace_flags(
-        env["CCFLAGS"],
+        cpp_env["CCFLAGS"],
         {
             "-mios-simulator-version-min=10.0": "-mios-simulator-version-min=11.0",
             "-miphoneos-version-min=10.0": "-miphoneos-version-min=11.0",
@@ -46,7 +50,7 @@ if env["godot_version"] == "3":
         },
     )
 
-    env = env.Clone()
+    env = cpp_env.Clone()
 
     if env["target"] == "debug":
         env.Append(CPPDEFINES=["DEBUG_ENABLED"])
@@ -64,7 +68,7 @@ if env["godot_version"] == "3":
 
     # Normalize suffix
     if env["platform"] in ["windows", "linux"]:
-        env["arch"] = "x86_32" if env["bits"] == "32" else "x86_64"
+        env["arch"] = ARGUMENTS.get("arch", "x86_32" if env["bits"] == "32" else "x86_64")
         env["arch_suffix"] = env["arch"]
     elif env["platform"] == "macos":
         env["arch"] = env["macos_arch"]
@@ -96,6 +100,10 @@ if env["godot_version"] == "3":
         elif not env["use_mingw"]:
             # Mark as MSVC build (would have failed to build the library otherwise).
             env["is_msvc"] = True
+    # Some linux specific hacks to allow cross-compiling for non-x86 machines.
+    if env["platform"] == "linux" and env["arch"] not in ("x86_32", "x86_64"):
+        for flags in (env["CCFLAGS"], env["LINKFLAGS"], cpp_env["CCFLAGS"], cpp_env["LINKFLAGS"]):
+            replace_flags(flags, {"-m32": None, "-m64": None})
 elif env["godot_version"] == "4.0":
     env = SConscript("godot-cpp-4.0/SConstruct").Clone()
 else:
