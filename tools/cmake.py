@@ -37,6 +37,8 @@ def cmake_default_flags(env):
         linux_flags = {
             "x86_64": "-m64",
             "x86_32": "-m32",
+            "arm32": "-march=armv7-a",
+            "arm64": "-march=armv8-a",
         }.get(env["arch"], "")
         if linux_flags:
             config["CMAKE_C_FLAGS"] = linux_flags
