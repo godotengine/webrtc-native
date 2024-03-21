@@ -52,9 +52,9 @@ void LogCallback(rtc::LogLevel level, std::string message) {
 			WARN_PRINT(message.c_str());
 			return;
 	}
-	#ifndef GDNATIVE_WEBRTC
+#ifndef GDNATIVE_WEBRTC
 	UtilityFunctions::print(message.c_str());
-	#endif
+#endif
 }
 
 void WebRTCLibPeerConnection::initialize_signaling() {
