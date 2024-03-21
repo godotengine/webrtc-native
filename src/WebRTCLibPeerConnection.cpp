@@ -39,11 +39,31 @@ using namespace godot_webrtc;
 #define FAILED Error::FAILED
 #define ERR_UNCONFIGURED Error::ERR_UNCONFIGURED
 #define ERR_INVALID_PARAMETER Error::ERR_INVALID_PARAMETER
+#define VERBOSE_PRINT(str) Godot::print(str)
+#else
+#include <godot_cpp/variant/utility_functions.hpp>
+#define VERBOSE_PRINT(str) UtilityFunctions::print_verbose(str)
 #endif
+void LogCallback(rtc::LogLevel level, std::string message) {
+	switch (level) {
+		case rtc::LogLevel::Fatal:
+		case rtc::LogLevel::Error:
+			ERR_PRINT(message.c_str());
+			return;
+		case rtc::LogLevel::Warning:
+			WARN_PRINT(message.c_str());
+			return;
+		default:
+			VERBOSE_PRINT(message.c_str());
+			return;
+	}
+}
 
 void WebRTCLibPeerConnection::initialize_signaling() {
 #ifdef DEBUG_ENABLED
-	rtc::InitLogger(rtc::LogLevel::Debug);
+	rtc::InitLogger(rtc::LogLevel::Debug, LogCallback);
+#else
+	rtc::InitLogger(rtc::LogLevel::Warning, LogCallback);
 #endif
 }
 
