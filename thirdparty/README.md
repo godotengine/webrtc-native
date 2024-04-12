@@ -19,7 +19,7 @@ Module location:
 ## libdatachannel
 
 - Upstream: https://github.com/paullouisageneau/libdatachannel
-- Version: 0.20.1 (7841d9f34cf9bd735958ae203a2536c14240c8a5, 2024)
+- Version: 0.20.2 (0b1074a9effeb8d9d3f4eca704d3fe3d2f9bc7e5, 2024)
 - License: MPL 2.0
 
 Module location:
