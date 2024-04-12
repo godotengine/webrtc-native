@@ -20,9 +20,23 @@ def replace_flags(flags, replaces):
             flags[flags.index(k)] = v
 
 
+def validate_godotcpp_dir(key, val, env):
+    normalized = val if os.path.isabs(val) else os.path.join(env.Dir("#").abspath, val)
+    if not os.path.isdir(normalized):
+        raise UserError("GDExtension directory ('%s') does not exist: %s" % (key, val))
+
+
 env = Environment()
 opts = Variables(["customs.py"], ARGUMENTS)
 opts.Add(EnumVariable("godot_version", "The Godot target version", "4.1", ["3", "4.0", "4.1"]))
+opts.Add(
+    PathVariable(
+        "godot_cpp",
+        "Path to the directory containing Godot CPP folder",
+        None,
+        validate_godotcpp_dir,
+    )
+)
 opts.Update(env)
 
 # Minimum target platform versions.
@@ -33,11 +47,15 @@ if "macos_deployment_target" not in ARGUMENTS:
 if "android_api_level" not in ARGUMENTS:
     ARGUMENTS["android_api_level"] = "28"
 
+# Recent godot-cpp versions disables exceptions by default, but libdatachannel requires them.
+ARGUMENTS["disable_exceptions"] = "no"
+
 if env["godot_version"] == "3":
     if "platform" in ARGUMENTS and ARGUMENTS["platform"] == "macos":
         ARGUMENTS["platform"] = "osx"  # compatibility with old osx name
 
-    cpp_env = SConscript("godot-cpp-3.x/SConstruct")
+    sconstruct = env.get("godot_cpp", "godot-cpp-3.x") + "/SConstruct"
+    cpp_env = SConscript(sconstruct)
 
     # Patch base env
     replace_flags(
@@ -105,9 +123,18 @@ if env["godot_version"] == "3":
         for flags in (env["CCFLAGS"], env["LINKFLAGS"], cpp_env["CCFLAGS"], cpp_env["LINKFLAGS"]):
             replace_flags(flags, {"-m32": None, "-m64": None})
 elif env["godot_version"] == "4.0":
-    env = SConscript("godot-cpp-4.0/SConstruct").Clone()
+    sconstruct = env.get("godot_cpp", "godot-cpp-4.0") + "/SConstruct"
+    cpp_env = SConscript(sconstruct)
+    env = cpp_env.Clone()
 else:
-    env = SConscript("godot-cpp/SConstruct").Clone()
+    sconstruct = env.get("godot_cpp", "godot-cpp") + "/SConstruct"
+    cpp_env = SConscript(sconstruct)
+    env = cpp_env.Clone()
+
+if cpp_env.get("is_msvc", False):
+    # Make sure we don't build with static cpp on MSVC (default in recent godot-cpp versions).
+    replace_flags(env["CCFLAGS"], {"/MT": "/MD"})
+    replace_flags(cpp_env["CCFLAGS"], {"/MT": "/MD"})
 
 # Should probably go to upstream godot-cpp.
 # We let SCons build its default ENV as it includes OS-specific things which we don't
