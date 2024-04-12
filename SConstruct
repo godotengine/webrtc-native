@@ -33,6 +33,9 @@ if "macos_deployment_target" not in ARGUMENTS:
 if "android_api_level" not in ARGUMENTS:
     ARGUMENTS["android_api_level"] = "28"
 
+# Recent godot-cpp versions disables exceptions by default, but libdatachannel requires them.
+ARGUMENTS["disable_exceptions"] = "no"
+
 if env["godot_version"] == "3":
     if "platform" in ARGUMENTS and ARGUMENTS["platform"] == "macos":
         ARGUMENTS["platform"] = "osx"  # compatibility with old osx name
