@@ -129,7 +129,7 @@ jobs:
 
     env:
       SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
-      SCONSFLAGS: ${{ matrix.sconsflags }} platform=${{ matrix.platform }} arch=${{ matrix.arch }} --jobs=2
+      SCONSFLAGS: ${{ matrix.sconsflags }} platform=${{ matrix.platform }} arch=${{ matrix.arch }} build_profile=build_profile.json --jobs=2
 
     defaults:
       run:
@@ -195,6 +195,12 @@ jobs:
           echo "PKG_CONFIG=$GITHUB_WORKSPACE/${{ matrix.buildroot }}/share/pkgconfig/" >> $GITHUB_ENV
           patch -p1 < misc/patches/scons_path.diff
           patch -p1 < misc/patches/gdnantive_arm_warnings.diff
+
+      - name: Patch godot-cpp to support build profile.
+        run: |
+          patch -p1 < misc/patches/build_profile.diff
+          patch -p1 < misc/patches/build_profile_4.0.diff
+          patch -p1 < misc/patches/build_profile_3.x.diff
 
       - name: Print tools versions
         run: |

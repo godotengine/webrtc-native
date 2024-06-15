@@ -1,0 +1,10 @@
+{
+	"enabled_classes": [
+		"WebRTCDataChannelExtension",
+		"WebRTCPeerConnectionExtension",
+		"WebRTCDataChannelGDNative",
+		"WebRTCPeerConnectionGDNative",
+		"NativeScript",
+		"GDNativeLibrary"
+	]
+}
