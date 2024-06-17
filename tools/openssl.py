@@ -79,7 +79,15 @@ def ssl_platform_flags(env):
         if env.get("android_api_level", ""):
             api = int(env["android_api_level"])
             args.append("-D__ANDROID_API__=%s" % api)
+    elif env["platform"] == "ios":
+        if env.get("ios_min_version", "default") != "default":
+            if env.get("ios_simulator", False):
+                args.append("-mios-simulator-version-min=%s" % env["ios_min_version"])
+            else:
+                args.append("-miphoneos-version-min=%s" % env["ios_min_version"])
     elif env["platform"] == "macos":
+        if env.get("macos_deployment_target", "default") != "default":
+            args.append("-mmacosx-version-min=%s" % env["macos_deployment_target"])
         # OSXCross toolchain setup.
         if sys.platform != "darwin" and "OSXCROSS_ROOT" in os.environ:
             for k in ["CC", "CXX", "AR", "AS", "RANLIB"]:

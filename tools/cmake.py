@@ -49,10 +49,9 @@ def cmake_default_flags(env):
             config["CMAKE_OSX_ARCHITECTURES"] = '"x86_64;arm64"'
         else:
             config["CMAKE_OSX_ARCHITECTURES"] = env["arch"]
-        if env["macos_deployment_target"] != "default":
+        if env.get("macos_deployment_target", "default") != "default":
             config["CMAKE_OSX_DEPLOYMENT_TARGET"] = env["macos_deployment_target"]
-
-        if env["platform"] == "macos" and sys.platform != "darwin" and "OSXCROSS_ROOT" in os.environ:
+        if sys.platform != "darwin" and "OSXCROSS_ROOT" in os.environ:
             config["CMAKE_AR"] = env["AR"]
             config["CMAKE_RANLIB"] = env["RANLIB"]
             if env["arch"] == "universal":
