@@ -45,80 +45,80 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Android
-          - platform: android
-            arch: 'x86_64'
-            gdnative_flags: 'android_arch=x86_64'
-            sconsflags: ''
-            os: 'ubuntu-20.04'
-            cache-name: android-x86_64
-          - platform: android
-            arch: 'arm64'
-            gdnative_flags: 'android_arch=arm64v8'
-            sconsflags: ''
-            os: 'ubuntu-20.04'
-            cache-name: android-arm64
+          # # Android
+          # - platform: android
+          #   arch: 'x86_64'
+          #   gdnative_flags: 'android_arch=x86_64'
+          #   sconsflags: ''
+          #   os: 'ubuntu-20.04'
+          #   cache-name: android-x86_64
+          # - platform: android
+          #   arch: 'arm64'
+          #   gdnative_flags: 'android_arch=arm64v8'
+          #   sconsflags: ''
+          #   os: 'ubuntu-20.04'
+          #   cache-name: android-arm64
 
-          # iOS
-          - platform: ios
-            arch: 'x86_64'
-            gdnative_flags: 'ios_arch=x86_64'
-            sconsflags: 'ios_simulator=true'
-            os: 'macos-12'
-            cache-name: ios-x86_64-simulator
-          - platform: ios
-            arch: 'arm64'
-            gdnative_flags: 'ios_arch=arm64'
-            sconsflags: ''
-            os: 'macos-12'
-            cache-name: ios-arm64
+          # # iOS
+          # - platform: ios
+          #   arch: 'x86_64'
+          #   gdnative_flags: 'ios_arch=x86_64'
+          #   sconsflags: 'ios_simulator=true'
+          #   os: 'macos-12'
+          #   cache-name: ios-x86_64-simulator
+          # - platform: ios
+          #   arch: 'arm64'
+          #   gdnative_flags: 'ios_arch=arm64'
+          #   sconsflags: ''
+          #   os: 'macos-12'
+          #   cache-name: ios-arm64
 
-          # Linux
-          - platform: linux
-            arch: 'x86_32'
-            buildroot: 'i686-godot-linux-gnu_sdk-buildroot'
-            gdnative_flags: 'bits=32'
-            sconsflags: ''
-            os: 'ubuntu-20.04'
-            cache-name: linux-x86_32
-          - platform: linux
-            arch: 'x86_64'
-            buildroot: 'x86_64-godot-linux-gnu_sdk-buildroot'
-            gdnative_flags: 'bits=64'
-            sconsflags: ''
-            os: 'ubuntu-20.04'
-            cache-name: linux-x86_64
-          - platform: linux
-            arch: 'arm32'
-            buildroot: 'arm-godot-linux-gnueabihf_sdk-buildroot'
-            gdnative_flags: 'bits=32'
-            sconsflags: ''
-            os: 'ubuntu-20.04'
-            cache-name: linux-arm32
-          - platform: linux
-            arch: 'arm64'
-            buildroot: 'aarch64-godot-linux-gnu_sdk-buildroot'
-            gdnative_flags: 'bits=64'
-            sconsflags: ''
-            os: 'ubuntu-20.04'
-            cache-name: linux-arm64
+          # # Linux
+          # - platform: linux
+          #   arch: 'x86_32'
+          #   buildroot: 'i686-godot-linux-gnu_sdk-buildroot'
+          #   gdnative_flags: 'bits=32'
+          #   sconsflags: ''
+          #   os: 'ubuntu-20.04'
+          #   cache-name: linux-x86_32
+          # - platform: linux
+          #   arch: 'x86_64'
+          #   buildroot: 'x86_64-godot-linux-gnu_sdk-buildroot'
+          #   gdnative_flags: 'bits=64'
+          #   sconsflags: ''
+          #   os: 'ubuntu-20.04'
+          #   cache-name: linux-x86_64
+          # - platform: linux
+          #   arch: 'arm32'
+          #   buildroot: 'arm-godot-linux-gnueabihf_sdk-buildroot'
+          #   gdnative_flags: 'bits=32'
+          #   sconsflags: ''
+          #   os: 'ubuntu-20.04'
+          #   cache-name: linux-arm32
+          # - platform: linux
+          #   arch: 'arm64'
+          #   buildroot: 'aarch64-godot-linux-gnu_sdk-buildroot'
+          #   gdnative_flags: 'bits=64'
+          #   sconsflags: ''
+          #   os: 'ubuntu-20.04'
+          #   cache-name: linux-arm64
 
-          # macOS
-          - platform: macos
-            arch: 'universal'
-            gdnative_flags: 'macos_arch=universal bits=64'
-            sconsflags: ''
-            os: 'macos-12'
-            cache-name: macos-universal
+          # # macOS
+          # - platform: macos
+          #   arch: 'universal'
+          #   gdnative_flags: 'macos_arch=universal bits=64'
+          #   sconsflags: ''
+          #   os: 'macos-12'
+          #   cache-name: macos-universal
 
           # Windows
-          - platform: windows
-            arch: 'x86_32'
-            gdnative_flags: 'bits=32'
-            sconsflags: 'use_mingw=yes'
-            os: 'ubuntu-20.04'
-            msvc_arch: amd64_x86
-            cache-name: win-x86_32
+          # - platform: windows
+          #   arch: 'x86_32'
+          #   gdnative_flags: 'bits=32'
+          #   sconsflags: 'use_mingw=yes'
+          #   os: 'ubuntu-20.04'
+          #   msvc_arch: amd64_x86
+          #   cache-name: win-x86_32
           - platform: windows
             arch: 'x86_64'
             gdnative_flags: 'bits=64'
@@ -126,6 +126,13 @@ jobs:
             os: 'ubuntu-20.04'
             msvc_arch: amd64
             cache-name: win-x86_64
+          - platform: windows
+            arch: 'arm64'
+            gdnative_flags: 'bits=64'
+            sconsflags: 'use_mingw=yes'
+            os: 'ubuntu-20.04'
+            msvc_arch: amd64
+            cache-name: win-arm64
 
     env:
       SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
@@ -155,6 +162,10 @@ jobs:
           sudo update-alternatives --set i686-w64-mingw32-g++ /usr/bin/i686-w64-mingw32-g++-posix
           sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
           sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+          sudo update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix
+          sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+          sudo update-alternatives --set aarch64-w64-mingw32-gcc /usr/bin/aarch64-w64-mingw32-gcc-posix
+          sudo update-alternatives --set aarch64-w64-mingw32-g++ /usr/bin/aarch64-w64-mingw32-g++-posix
           dpkg -l | grep ii | grep mingw
           update-alternatives --get-selections | grep mingw
 
