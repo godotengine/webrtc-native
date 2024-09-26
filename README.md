@@ -1,5 +1,5 @@
 # GDNative WebRTC plugin for Godot
-aaaa
+
 ## Getting Started
 
 | **Download latest binary version** | [**GitHub**](https://github.com/godotengine/webrtc-native/releases) |
