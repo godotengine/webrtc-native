@@ -83,7 +83,7 @@ public:
 	SignalingState _get_signaling_state() const override;
 
 	godot::Error _initialize(const godot::Dictionary &p_config) override;
-#if defined(GDNATIVE_WEBRTC) || defined(GDEXTENSION_WEBRTC_40)
+#if defined(GDNATIVE_WEBRTC)
 	godot::Object *_create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) override;
 #else
 	godot::Ref<godot::WebRTCDataChannel> _create_data_channel(const godot::String &p_channel, const godot::Dictionary &p_channel_config) override;
