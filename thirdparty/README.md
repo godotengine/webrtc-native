@@ -19,7 +19,7 @@ Module location:
 ## libdatachannel
 
 - Upstream: https://github.com/paullouisageneau/libdatachannel
-- Version: 0.20.2 (0b1074a9effeb8d9d3f4eca704d3fe3d2f9bc7e5, 2024)
+- Version: 0.22.1 (f8ffbe37e6c06e4838b41c2c018ccc3a8028a1c8, 2024)
 - License: MPL 2.0
 
 Module location:
@@ -30,7 +30,7 @@ Module location:
 # libjuice
 
 - Upstream: https://github.com/paullouisageneau/libjuice
-- Version: 1.3.4 (0b6f958baba55e1a4eb31ec2137f62b2e07382ae, 2024)
+- Version: 1.5.7 (70ba50cce33350b64404557ea63658e925758ce6, 2024)
 - License: MPL 2.0
 
 Module location:
@@ -52,7 +52,7 @@ Module location:
 ## openssl
 
 - Upstream: git://git.openssl.org/openssl.git
-- Version: 3.0.13 (85cf92f55d9e2ac5aacf92bedd33fb890b9f8b4c, 2024)
+- Version: 3.4.0 (98acb6b02839c609ef5b837794e08d906d965335, 2024)
 - License: Apache 2.0
 
 Module location:

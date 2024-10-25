@@ -5,6 +5,7 @@
 		"WebRTCDataChannelGDNative",
 		"WebRTCPeerConnectionGDNative",
 		"NativeScript",
-		"GDNativeLibrary"
+		"GDNativeLibrary",
+		"Window"
 	]
 }
