@@ -41,7 +41,7 @@ opts.Update(env)
 
 # Minimum target platform versions.
 if "ios_min_version" not in ARGUMENTS:
-    ARGUMENTS["ios_min_version"] = "11.0"
+    ARGUMENTS["ios_min_version"] = "12.0"
 if "macos_deployment_target" not in ARGUMENTS:
     ARGUMENTS["macos_deployment_target"] = "11.0"
 if "android_api_level" not in ARGUMENTS:
@@ -61,8 +61,8 @@ if env["godot_version"] == "3":
     replace_flags(
         cpp_env["CCFLAGS"],
         {
-            "-mios-simulator-version-min=10.0": "-mios-simulator-version-min=11.0",
-            "-miphoneos-version-min=10.0": "-miphoneos-version-min=11.0",
+            "-mios-simulator-version-min=10.0": "-mios-simulator-version-min=12.0",
+            "-miphoneos-version-min=10.0": "-miphoneos-version-min=12.0",
             "/std:c++14": "/std:c++17",
             "-std=c++14": "-std=c++17",
         },
@@ -82,7 +82,7 @@ if env["godot_version"] == "3":
         env["CC"] = "clang"  # CC is not set in 3.x and can result in it being "gcc".
 
     if env["platform"] == "ios":
-        env["ios_min_version"] = "11.0"
+        env["ios_min_version"] = "12.0"
 
     # Normalize suffix
     if env["platform"] in ["windows", "linux"]:

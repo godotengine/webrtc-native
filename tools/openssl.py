@@ -32,8 +32,8 @@ def ssl_platform_target(env):
     elif platform == "ios":
         if env["ios_simulator"]:
             targets = {
-                "x86_64": "iossimulator-xcrun",
-                "arm64": "iossimulator-xcrun",
+                "x86_64": "iossimulator-x86_64-xcrun",
+                "arm64": "iossimulator-arm64-xcrun",
             }
         else:
             targets = {
