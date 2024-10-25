@@ -64,13 +64,13 @@ jobs:
             arch: 'x86_64'
             gdnative_flags: 'ios_arch=x86_64'
             sconsflags: 'ios_simulator=true'
-            os: 'macos-12'
+            os: 'macos-latest'
             cache-name: ios-x86_64-simulator
           - platform: ios
             arch: 'arm64'
             gdnative_flags: 'ios_arch=arm64'
             sconsflags: ''
-            os: 'macos-12'
+            os: 'macos-latest'
             cache-name: ios-arm64
 
           # Linux
@@ -108,7 +108,7 @@ jobs:
             arch: 'universal'
             gdnative_flags: 'macos_arch=universal bits=64'
             sconsflags: ''
-            os: 'macos-12'
+            os: 'macos-latest'
             cache-name: macos-universal
 
           # Windows
