@@ -199,7 +199,6 @@ jobs:
       - name: Patch godot-cpp to support build profile.
         run: |
           patch -p1 < misc/patches/build_profile.diff
-          patch -p1 < misc/patches/build_profile_4.0.diff
           patch -p1 < misc/patches/build_profile_3.x.diff
 
       - name: Print tools versions
@@ -210,19 +209,11 @@ jobs:
 
       - name: Compile Extension (4.1+) - template_debug - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=template_debug godot_version=4.1
+          scons target=template_debug godot_version=4
 
       - name: Compile Extension (4.1+) - template_release - ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
-          scons target=template_release godot_version=4.1
-
-      - name: Compile Extension (4.0) - template_debug - ${{ matrix.platform }} - ${{ matrix.arch }}
-        run: |
-          scons target=template_debug godot_version=4.0
-
-      - name: Compile Extension (4.0) - template_release - ${{ matrix.platform }} - ${{ matrix.arch }}
-        run: |
-          scons target=template_release godot_version=4.0
+          scons target=template_release godot_version=4
 
       - name: Compile GDNative (3.5+) - release ${{ matrix.platform }} - ${{ matrix.arch }}
         run: |
@@ -265,21 +256,15 @@ jobs:
         run: |
           mkdir release
 
-          VERSION="extension-4.1" TYPE="webrtc" ./misc/scripts/package_release.sh
-          VERSION="extension-4.0" TYPE="webrtc" ./misc/scripts/package_release.sh
+          VERSION="extension" TYPE="webrtc" ./misc/scripts/package_release.sh
           VERSION="gdnative" TYPE="webrtc" ./misc/scripts/package_release.sh
 
           ls -R release
 
       - uses: actions/upload-artifact@v4
         with:
-          name: godot-webrtc-extension-4.1
-          path: release/*-extension-4.1-*.zip
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: godot-webrtc-extension-4.0
-          path: release/*-extension-4.0-*.zip
+          name: godot-webrtc-extension
+          path: release/*-extension-*.zip
 
       - uses: actions/upload-artifact@v4
         with:

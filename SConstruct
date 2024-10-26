@@ -28,7 +28,7 @@ def validate_godotcpp_dir(key, val, env):
 
 env = Environment()
 opts = Variables(["customs.py"], ARGUMENTS)
-opts.Add(EnumVariable("godot_version", "The Godot target version", "4.1", ["3", "4.0", "4.1"]))
+opts.Add(EnumVariable("godot_version", "The Godot target version", "4", ["3", "4"], {"4.1+": "4", "4.1": "4"}))
 opts.Add(
     PathVariable(
         "godot_cpp",
@@ -122,10 +122,6 @@ if env["godot_version"] == "3":
     if env["platform"] == "linux" and env["arch"] not in ("x86_32", "x86_64"):
         for flags in (env["CCFLAGS"], env["LINKFLAGS"], cpp_env["CCFLAGS"], cpp_env["LINKFLAGS"]):
             replace_flags(flags, {"-m32": None, "-m64": None})
-elif env["godot_version"] == "4.0":
-    sconstruct = env.get("godot_cpp", "godot-cpp-4.0") + "/SConstruct"
-    cpp_env = SConscript(sconstruct)
-    env = cpp_env.Clone()
 else:
     sconstruct = env.get("godot_cpp", "godot-cpp") + "/SConstruct"
     cpp_env = SConscript(sconstruct)
@@ -160,10 +156,8 @@ opts.Update(env)
 target = env["target"]
 if env["godot_version"] == "3":
     result_path = os.path.join("bin", "gdnative", "webrtc" if env["target"] == "release" else "webrtc_debug")
-elif env["godot_version"] == "4.0":
-    result_path = os.path.join("bin", "extension-4.0", "webrtc")
 else:
-    result_path = os.path.join("bin", "extension-4.1", "webrtc")
+    result_path = os.path.join("bin", "extension", "webrtc")
 
 # Our includes and sources
 env.Append(CPPPATH=["src/"])
@@ -181,8 +175,6 @@ if env["godot_version"] == "3":
     add_sources(sources, "src/net/", "cpp")
 else:
     sources.append("src/init_gdextension.cpp")
-    if env["godot_version"] == "4.0":
-        env.Append(CPPDEFINES=["GDEXTENSION_WEBRTC_40"])
 
 # Add our build tools
 for tool in ["openssl", "cmake", "rtc"]:
