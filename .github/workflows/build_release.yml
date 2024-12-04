@@ -187,7 +187,7 @@ jobs:
         if: ${{ matrix.platform == 'linux' }}
         run: |
           if [ ! -f ${{ matrix.buildroot }}.tar.bz2 ]; then
-            wget https://downloads.tuxfamily.org/godotengine/toolchains/linux/${{ matrix.buildroot }}.tar.bz2
+            wget https://github.com/godotengine/buildroot/releases/download/godot-2023.08.x-4/${{ matrix.buildroot }}.tar.bz2
           fi
           tar -xjf ${{ matrix.buildroot }}.tar.bz2
           ${{ matrix.buildroot }}/relocate-sdk.sh
