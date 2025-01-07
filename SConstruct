@@ -241,10 +241,6 @@ if env["godot_version"] == "3":
         },
     )
 else:
-    extfile = env.Substfile(
-        os.path.join(result_path, "webrtc.gdextension"),
-        "misc/webrtc.gdextension",
-        SUBST_DICT={"{GODOT_VERSION}": env["godot_version"]},
-    )
+    extfile = env.InstallAs(os.path.join(result_path, "webrtc.gdextension"), "misc/webrtc.gdextension")
 
 Default(extfile)
