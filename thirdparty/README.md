@@ -49,15 +49,15 @@ Module location:
 - thirdparty/libdatachannel/deps/libsrtp
 
 
-## openssl
+## mbedTLS
 
-- Upstream: git://git.openssl.org/openssl.git
-- Version: 3.4.0 (98acb6b02839c609ef5b837794e08d906d965335, 2024)
+- Upstream: https://github.com/Mbed-TLS/mbedtls.git
+- Version: 3.1.2 (107ea89daaefb9867ea9121002fbbdf926780e98, 2024)
 - License: Apache 2.0
 
 Module location:
 
-- thirdparty/openssl
+- thirdparty/mbedtls
 
 
 ## plog

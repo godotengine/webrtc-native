@@ -1,19 +1,20 @@
 import os
 
 
-def build_library(env, ssl):
+def build_library(env, mbedtls):
     rtc_config = {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo" if env["debug_symbols"] else "Release",
+        "CMAKE_CXX_FLAGS": "-DMBEDTLS_SSL_DTLS_SRTP",
         "USE_NICE": 0,
         "NO_WEBSOCKET": 1,
         "NO_EXAMPLES": 1,
         "NO_TESTS": 1,
         "BUILD_WITH_WARNINGS": "0",  # Disables werror in libsrtp.
-        "OPENSSL_USE_STATIC_LIBS": 1,
-        "OPENSSL_INCLUDE_DIR": env["SSL_INCLUDE"],
-        "OPENSSL_SSL_LIBRARY": env["SSL_LIBRARY"],
-        "OPENSSL_CRYPTO_LIBRARY": env["SSL_CRYPTO_LIBRARY"],
-        "OPENSSL_ROOT_DIR": env["SSL_INSTALL"],
+        "USE_MBEDTLS": 1,
+        "MbedTLS_LIBRARY": env["MBEDTLS_LIBRARY"],
+        "MbedCrypto_LIBRARY": env["MBEDTLS_CRYPTO_LIBRARY"],
+        "MbedX509_LIBRARY": env["MBEDTLS_X509_LIBRARY"],
+        "MbedTLS_INCLUDE_DIR": env["MBEDTLS_INCLUDE"],
     }
     is_msvc = env.get("is_msvc", False)
     lib_ext = ".lib" if is_msvc else ".a"
@@ -24,6 +25,7 @@ def build_library(env, ssl):
         "deps/libsrtp/{}srtp2{}".format(lib_prefix, lib_ext),
         "deps/usrsctp/usrsctplib/{}usrsctp{}".format(lib_prefix, lib_ext),
     ]
+
     # Build libdatachannel
     rtc = env.CMakeBuild(
         "#bin/thirdparty/libdatachannel/",
@@ -31,12 +33,12 @@ def build_library(env, ssl):
         cmake_options=rtc_config,
         cmake_outputs=rtc_libs,
         cmake_targets=["datachannel-static"],
-        dependencies=ssl,
+        dependencies=mbedtls,
     )
 
     # Configure env.
     if env["platform"] == "windows":
-        env.PrependUnique(LIBS=["iphlpapi", "bcrypt"])
+        env.PrependUnique(LIBS=["iphlpapi", "ws2_32", "bcrypt"])
     if env["platform"] == "linux":
         env.PrependUnique(LIBS=["pthread"])
     env.Prepend(LIBS=list(filter(lambda f: str(f).endswith(lib_ext), rtc)))
