@@ -5,21 +5,10 @@ respective folder names. Use two empty lines to separate categories for
 readability.
 
 
-## json
-
-- Upstream: https://github.com/nlohmann/json
-- Version: 3.11.3 (9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03, 2023)
-- License: MIT
-
-Module location:
-
-- thirdparty/libdatachannel/deps/json
-
-
 ## libdatachannel
 
 - Upstream: https://github.com/paullouisageneau/libdatachannel
-- Version: 0.22.3 (d74748fd46f75cee5090d187841c6921820eb9d0, 2024)
+- Version: 0.22.6 (0d6adc021953d7263fd4503482ea7bde33553724, 2025)
 - License: MPL 2.0
 
 Module location:
@@ -30,7 +19,7 @@ Module location:
 # libjuice
 
 - Upstream: https://github.com/paullouisageneau/libjuice
-- Version: 1.5.7 (70ba50cce33350b64404557ea63658e925758ce6, 2024)
+- Version: 1.5.9 (8d1a99a0683a811876c03a73ff764a92774027ad, 2025)
 - License: MPL 2.0
 
 Module location:
@@ -49,15 +38,15 @@ Module location:
 - thirdparty/libdatachannel/deps/libsrtp
 
 
-## openssl
+## mbedTLS
 
-- Upstream: git://git.openssl.org/openssl.git
-- Version: 3.4.0 (98acb6b02839c609ef5b837794e08d906d965335, 2024)
+- Upstream: https://github.com/Mbed-TLS/mbedtls.git
+- Version: 3.6.3 (22098d41c6620ce07cf8a0134d37302355e1e5ef, 2025)
 - License: Apache 2.0
 
 Module location:
 
-- thirdparty/openssl
+- thirdparty/mbedtls
 
 
 ## plog

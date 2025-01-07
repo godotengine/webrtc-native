@@ -193,6 +193,7 @@ jobs:
           fi
           tar -xjf ${{ matrix.buildroot }}.tar.bz2
           ${{ matrix.buildroot }}/relocate-sdk.sh
+          rm ${{ matrix.buildroot }}/bin/cmake
           echo "$GITHUB_WORKSPACE/${{ matrix.buildroot }}/bin" >> $GITHUB_PATH
           echo "PKG_CONFIG=$GITHUB_WORKSPACE/${{ matrix.buildroot }}/share/pkgconfig/" >> $GITHUB_ENV
           patch -p1 < misc/patches/scons_path.diff
@@ -252,11 +253,10 @@ jobs:
         run: |
           cp LICENSE artifacts/LICENSE.webrtc-native
           cp thirdparty/libdatachannel/LICENSE artifacts/LICENSE.libdatachannel
-          cp thirdparty/openssl/LICENSE.txt artifacts/LICENSE.openssl
+          cp thirdparty/mbedtls/LICENSE artifacts/LICENSE.mbedtls
           cp thirdparty/libdatachannel/deps/libjuice/LICENSE artifacts/LICENSE.libjuice
           cp thirdparty/libdatachannel/deps/usrsctp/LICENSE.md artifacts/LICENSE.usrsctp
           cp thirdparty/libdatachannel/deps/libsrtp/LICENSE artifacts/LICENSE.libsrtp
-          cp thirdparty/libdatachannel/deps/json/LICENSE.MIT artifacts/LICENSE.json
           cp thirdparty/libdatachannel/deps/plog/LICENSE artifacts/LICENSE.plog
 
       - name: Package artifacts for release
