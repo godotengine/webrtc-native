@@ -1,8 +1,52 @@
 diff --git a/godot-cpp-3.x/SConstruct b/godot-cpp-3.x/SConstruct
-index f653d54..44f66a5 100644
+index f653d54..483f190 100644
 --- a/godot-cpp-3.x/SConstruct
 +++ b/godot-cpp-3.x/SConstruct
-@@ -170,6 +170,14 @@ opts.Add(
+@@ -3,7 +3,42 @@
+ import os
+ import sys
+ import subprocess
+-from binding_generator import scons_generate_bindings, scons_emit_files
++from binding_generator import _generate_bindings, _get_file_list, get_file_list
++from build_profile import generate_trimmed_api
++
++
++def normalize_path(val):
++    return val if os.path.isabs(val) else os.path.join(env.Dir("#").abspath, val)
++
++
++def scons_emit_files(target, source, env):
++    profile_filepath = env.get("build_profile", "")
++    if profile_filepath:
++        profile_filepath = normalize_path(profile_filepath)
++
++    # Always clean all files
++    env.Clean(target, [env.File(f) for f in get_file_list(str(source[0]), target[0].abspath, True, True)])
++
++    api = generate_trimmed_api(str(source[0]), profile_filepath)
++    files = [env.File(f) for f in _get_file_list(api, target[0].abspath, True, True)]
++    env["godot_cpp_gen_dir"] = target[0].abspath
++    return files, source
++
++
++def scons_generate_bindings(target, source, env):
++    profile_filepath = env.get("build_profile", "")
++    if profile_filepath:
++        profile_filepath = normalize_path(profile_filepath)
++
++    api = generate_trimmed_api(str(source[0]), profile_filepath)
++
++    _generate_bindings(
++        api,
++        env["generate_template_get_node"],
++        env["godot_cpp_gen_dir"],
++    )
++    return None
++
+ 
+ if sys.version_info < (3,):
+ 
+@@ -170,6 +205,14 @@ opts.Add(
          True,
      )
  )
@@ -11,38 +55,65 @@ index f653d54..44f66a5 100644
 +        "build_profile",
 +        "Path to a file containing a feature build profile",
 +        default=env.get("build_profile", None),
-+        validator=lambda key, val, env: val if os.path.isabs(val) else os.path.join(env.Dir("#").abspath, val),
++        validator=lambda key, val, env: os.path.isfile(normalize_path(val)),
 +    )
 +)
  
  opts.Add(BoolVariable("build_library", "Build the godot-cpp library.", True))
  
 diff --git a/godot-cpp-3.x/binding_generator.py b/godot-cpp-3.x/binding_generator.py
-index da4bb61..e5bd040 100644
+index da4bb61..1348a51 100644
 --- a/godot-cpp-3.x/binding_generator.py
 +++ b/godot-cpp-3.x/binding_generator.py
-@@ -12,14 +12,115 @@ def correct_method_name(method_list):
-             method["name"] = "get_node_internal"
+@@ -16,10 +16,16 @@ classes = []
  
  
-+def is_class_included(class_name, build_profile):
-+    """
-+    Check if an engine class should be included.
-+    This removes classes according to a build profile of enabled or disabled classes.
-+    """
-+    included = build_profile.get("enabled_classes", [])
-+    excluded = build_profile.get("disabled_classes", [])
-+    if included:
-+        return class_name in included
-+    if excluded:
-+        return class_name not in excluded
-+    return True
+ def get_file_list(api_filepath, output_dir, headers=False, sources=False):
+-    global classes
+-    files = []
++    api = {}
+     with open(api_filepath) as api_file:
+         classes = json.load(api_file)
++    return _get_file_list(classes, output_dir, headers, sources)
++
++
++def _get_file_list(api, output_dir, headers=False, sources=False):
++    global classes
++    classes = api
++    files = []
+     include_gen_folder = Path(output_dir) / "include" / "gen"
+     source_gen_folder = Path(output_dir) / "src" / "gen"
+     for _class in classes:
+@@ -58,9 +64,15 @@ def scons_generate_bindings(target, source, env):
+ 
+ 
+ def generate_bindings(api_filepath, use_template_get_node, output_dir="."):
+-    global classes
++    classes = {}
+     with open(api_filepath) as api_file:
+         classes = json.load(api_file)
++    _generate_bindings(classes, use_template_get_node, output_dir)
++
++
++def _generate_bindings(api, use_template_get_node, output_dir="."):
++    global classes
++    classes = api
+ 
+     icalls = set()
+     include_gen_folder = Path(output_dir) / "include" / "gen"
+diff --git a/godot-cpp-3.x/build_profile.py b/godot-cpp-3.x/build_profile.py
+new file mode 100644
+index 0000000..5518f64
+--- /dev/null
++++ b/godot-cpp-3.x/build_profile.py
+@@ -0,0 +1,177 @@
++import json
++import sys
 +
 +
 +def parse_build_profile(profile_filepath, api):
 +    if profile_filepath == "":
 +        return {}
-+    print("Using feature build profile: " + profile_filepath)
 +
 +    with open(profile_filepath, encoding="utf-8") as profile_file:
 +        profile = json.load(profile_file)
@@ -60,32 +131,19 @@ index da4bb61..e5bd040 100644
 +        children[parent] = children.get(parent, [])
 +        children[parent].append(child)
 +
-+    # Parse methods dependencies
-+    deps = {}
-+    reverse_deps = {}
-+    for name, engine_class in api_dict.items():
-+        ref_cls = set()
-+        for method in engine_class.get("methods", []):
-+            rtype = method.get("return_value", {}).get("type", "")
-+            args = [a["type"] for a in method.get("arguments", [])]
-+            if rtype in api_dict:
-+                ref_cls.add(rtype)
-+            for arg in args:
-+                if arg in api_dict:
-+                    ref_cls.add(arg)
-+        deps[engine_class["name"]] = set(filter(lambda x: x != name, ref_cls))
-+        for acls in ref_cls:
-+            if acls == name:
-+                continue
-+            reverse_deps[acls] = reverse_deps.get(acls, set())
-+            reverse_deps[acls].add(name)
-+
 +    included = []
 +    front = list(profile.get("enabled_classes", []))
 +    if front:
 +        # These must always be included
-+        front.append("ConfigFile")
++        front.append("WorkerThreadPool")
 +        front.append("ClassDB")
++        front.append("ClassDBSingleton")
++        # In src/classes/low_level.cpp
++        front.append("FileAccess")
++        front.append("Image")
++        front.append("XMLParser")
++        # In include/godot_cpp/templates/thread_work_pool.hpp
++        front.append("Semaphore")
 +    while front:
 +        cls = front.pop()
 +        if cls in included:
@@ -94,10 +152,6 @@ index da4bb61..e5bd040 100644
 +        parent = parents.get(cls, "")
 +        if parent:
 +            front.append(parent)
-+        for rcls in deps.get(cls, set()):
-+            if rcls in included or rcls in front:
-+                continue
-+            front.append(rcls)
 +
 +    excluded = []
 +    front = list(profile.get("disabled_classes", []))
@@ -107,10 +161,6 @@ index da4bb61..e5bd040 100644
 +            continue
 +        excluded.append(cls)
 +        front += children.get(cls, [])
-+        for rcls in reverse_deps.get(cls, set()):
-+            if rcls in excluded or rcls in front:
-+                continue
-+            front.append(rcls)
 +
 +    if included and excluded:
 +        print(
@@ -123,74 +173,114 @@ index da4bb61..e5bd040 100644
 +    }
 +
 +
- classes = []
- 
- 
--def get_file_list(api_filepath, output_dir, headers=False, sources=False):
-+def get_file_list(api_filepath, output_dir, headers=False, sources=False, profile_filepath=""):
-     global classes
++def generate_trimmed_api(source_api_filepath, profile_filepath):
++    with open(source_api_filepath, encoding="utf-8") as api_file:
++        api = json.load(api_file)
 +
-     files = []
-     with open(api_filepath) as api_file:
-         classes = json.load(api_file)
-+        build_profile = parse_build_profile(profile_filepath, classes)
++    if profile_filepath == "":
++        return api
 +
-     include_gen_folder = Path(output_dir) / "include" / "gen"
-     source_gen_folder = Path(output_dir) / "src" / "gen"
-     for _class in classes:
-@@ -27,7 +128,7 @@ def get_file_list(api_filepath, output_dir, headers=False, sources=False):
-         source_filename = source_gen_folder / (strip_name(_class["name"]) + ".cpp")
-         if headers:
-             files.append(str(header_filename.as_posix()))
--        if sources:
-+        if sources and is_class_included(_class["name"], build_profile):
-             files.append(str(source_filename.as_posix()))
-     icall_header_filename = include_gen_folder / "__icalls.hpp"
-     register_types_filename = source_gen_folder / "__register_types.cpp"
-@@ -40,27 +141,32 @@ def get_file_list(api_filepath, output_dir, headers=False, sources=False):
-     return files
- 
- 
--def print_file_list(api_filepath, output_dir, headers=False, sources=False):
--    for f in get_file_list(api_filepath, output_dir, headers, sources):
-+def print_file_list(api_filepath, output_dir, headers=False, sources=False, profile_filepath=""):
-+    for f in get_file_list(api_filepath, output_dir, headers, sources, profile_filepath):
-         print(f, end=";")
- 
- 
- def scons_emit_files(target, source, env):
--    files = [env.File(f) for f in get_file_list(str(source[0]), target[0].abspath, True, True)]
-+    profile_filepath = env.get("build_profile", "")
-+    if profile_filepath and not Path(profile_filepath).is_absolute():
-+        profile_filepath = str((Path(env.Dir("#").abspath) / profile_filepath).as_posix())
++    build_profile = parse_build_profile(profile_filepath, api)
 +
-+    files = [env.File(f) for f in get_file_list(str(source[0]), target[0].abspath, True, True, profile_filepath)]
-     env.Clean(target, files)
-     env["godot_cpp_gen_dir"] = target[0].abspath
-     return files, source
- 
- 
- def scons_generate_bindings(target, source, env):
--    generate_bindings(str(source[0]), env["generate_template_get_node"], env["godot_cpp_gen_dir"])
-+    generate_bindings(str(source[0]), env["generate_template_get_node"], env["godot_cpp_gen_dir"], env["build_profile"])
-     return None
- 
- 
--def generate_bindings(api_filepath, use_template_get_node, output_dir="."):
-+def generate_bindings(api_filepath, use_template_get_node, output_dir=".", profile_filepath=""):
-     global classes
-     with open(api_filepath) as api_file:
-         classes = json.load(api_file)
-+        build_profile = parse_build_profile(profile_filepath, classes)
- 
-     icalls = set()
-     include_gen_folder = Path(output_dir) / "include" / "gen"
-@@ -97,7 +203,7 @@ def generate_bindings(api_filepath, use_template_get_node, output_dir="."):
- 
-     init_method_bindings_filename = source_gen_folder / "__init_method_bindings.cpp"
-     with init_method_bindings_filename.open("w+") as init_method_bindings_file:
--        init_method_bindings_file.write(generate_init_method_bindings(classes))
-+        init_method_bindings_file.write(generate_init_method_bindings(list(filter(lambda x: is_class_included(x["name"], build_profile), classes))))
- 
- 
- def is_reference_type(t):
++    engine_classes = {}
++    for class_api in api:
++        engine_classes[class_api["name"]] = class_api["is_reference"]
++
++    classes = []
++    for class_api in api:
++        if not is_class_included(class_api["name"], build_profile):
++            continue
++        if "methods" in class_api:
++            methods = []
++            for method in class_api["methods"]:
++                if not is_method_included(method, build_profile, engine_classes):
++                    continue
++                methods.append(method)
++            class_api["methods"] = methods
++        classes.append(class_api)
++    return classes
++
++
++def is_class_included(class_name, build_profile):
++    """
++    Check if an engine class should be included.
++    This removes classes according to a build profile of enabled or disabled classes.
++    """
++    included = build_profile.get("enabled_classes", [])
++    excluded = build_profile.get("disabled_classes", [])
++    if included:
++        return class_name in included
++    if excluded:
++        return class_name not in excluded
++    return True
++
++
++def is_method_included(method, build_profile, engine_classes):
++    """
++    Check if an engine class method should be included.
++    This removes methods according to a build profile of enabled or disabled classes.
++    """
++    included = build_profile.get("enabled_classes", [])
++    excluded = build_profile.get("disabled_classes", [])
++    ref_cls = set()
++    rtype = get_base_type(method.get("return_type", ""))
++    args = [get_base_type(a["type"]) for a in method.get("arguments", [])]
++    if rtype in engine_classes:
++        ref_cls.add(rtype)
++    elif is_enum(rtype) and get_enum_class(rtype) in engine_classes:
++        ref_cls.add(get_enum_class(rtype))
++    for arg in args:
++        if arg in engine_classes:
++            ref_cls.add(arg)
++        elif is_enum(arg) and get_enum_class(arg) in engine_classes:
++            ref_cls.add(get_enum_class(arg))
++    for acls in ref_cls:
++        if len(included) > 0 and acls not in included:
++            return False
++        elif len(excluded) > 0 and acls in excluded:
++            return False
++    return True
++
++
++def is_enum(type_name):
++    return type_name.startswith("enum::") or type_name.startswith("bitfield::")
++
++
++def get_enum_class(enum_name: str):
++    if "." in enum_name:
++        if is_bitfield(enum_name):
++            return enum_name.replace("bitfield::", "").split(".")[0]
++        else:
++            return enum_name.replace("enum::", "").split(".")[0]
++    else:
++        return "GlobalConstants"
++
++
++def get_base_type(type_name):
++    if type_name.startswith("const "):
++        type_name = type_name[6:]
++    if type_name.endswith("*"):
++        type_name = type_name[:-1]
++    if type_name.startswith("typedarray::"):
++        type_name = type_name.replace("typedarray::", "")
++    return type_name
++
++
++def is_bitfield(type_name):
++    return type_name.startswith("bitfield::")
++
++
++if __name__ == "__main__":
++    if len(sys.argv) < 3 or len(sys.argv) > 4:
++        print("Usage: %s BUILD_PROFILE INPUT_JSON [OUTPUT_JSON]" % (sys.argv[0]))
++        sys.exit(1)
++    profile = sys.argv[1]
++    infile = sys.argv[2]
++    outfile = sys.argv[3] if len(sys.argv) > 3 else ""
++    api = generate_trimmed_api(infile, profile)
++
++    if outfile:
++        with open(outfile, "w", encoding="utf-8") as f:
++            json.dump(api, f)
++    else:
++        json.dump(api, sys.stdout)

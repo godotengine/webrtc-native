@@ -6,6 +6,11 @@ from SCons.Defaults import Mkdir
 from SCons.Variables import PathVariable, BoolVariable
 
 
+# This must be kept in sync with the value in https://github.com/godotengine/godot/blob/master/platform/android/detect.py#L58.
+def get_ndk_version():
+    return "23.2.8568313"
+
+
 def ssl_platform_target(env):
     targets = {}
     platform = env["platform"]
@@ -264,7 +269,8 @@ def generate(env):
         if cc_path and cc_path not in env["ENV"]:
             env.PrependENVPath("PATH", cc_path)
         if "ANDROID_NDK_ROOT" not in env["ENV"]:
-            env["ENV"]["ANDROID_NDK_ROOT"] = env.get("ANDROID_NDK_ROOT", os.environ.get("ANDROID_NDK_ROOT", ""))
+            ndk_root = os.environ.get("ANDROID_NDK_ROOT", env.get("ANDROID_HOME", "") + "/ndk/" + get_ndk_version())
+            env["ENV"]["ANDROID_NDK_ROOT"] = ndk_root
 
     env["SSL_SOURCE"] = env.Dir(env["openssl_source"]).abspath
     env["SSL_BUILD"] = env.Dir(env["openssl_build"] + "/{}/{}".format(env["platform"], env["arch"])).abspath

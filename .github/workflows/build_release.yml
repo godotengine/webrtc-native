@@ -4,6 +4,8 @@ on: [push, pull_request]
 env:
   # Only used for the cache key. Increment version to force clean build.
   GODOT_BASE_BRANCH: master
+  # Hardcoding this seem to be the only way
+  ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/23.2.8568313/
 
 jobs:
   static-checks:
@@ -195,6 +197,13 @@ jobs:
           echo "PKG_CONFIG=$GITHUB_WORKSPACE/${{ matrix.buildroot }}/share/pkgconfig/" >> $GITHUB_ENV
           patch -p1 < misc/patches/scons_path.diff
           patch -p1 < misc/patches/gdnantive_arm_warnings.diff
+
+      - name: Setup Android dependencies
+        if: ${{ matrix.platform  == 'android' }}
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r23c
+          link-to-sdk: true
 
       - name: Patch godot-cpp to support build profile.
         run: |
