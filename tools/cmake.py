@@ -5,6 +5,11 @@ import SCons.Builder
 import SCons.Action
 
 
+# This must be kept in sync with the value in https://github.com/godotengine/godot/blob/master/platform/android/detect.py#L58.
+def get_ndk_version():
+    return "23.2.8568313"
+
+
 def cmake_default_flags(env):
     if env.get("cmake_default_flags", ""):
         return SCons.Util.CLVar(env["cmake_default_flags"])
@@ -28,9 +33,8 @@ def cmake_default_flags(env):
         config["CMAKE_SYSTEM_VERSION"] = api
         config["CMAKE_ANDROID_ARCH_ABI"] = abi
         config["ANDROID_ABI"] = abi
-        config["CMAKE_TOOLCHAIN_FILE"] = "%s/build/cmake/android.toolchain.cmake" % env.get(
-            "ANDROID_NDK_ROOT", os.environ.get("ANDROID_NDK_ROOT", "")
-        )
+        ndk_root = os.environ.get("ANDROID_NDK_ROOT", env.get("ANDROID_HOME", "") + "/ndk/" + get_ndk_version())
+        config["CMAKE_TOOLCHAIN_FILE"] = "%s/build/cmake/android.toolchain.cmake" % ndk_root
         config["CMAKE_ANDROID_STL_TYPE"] = "c++_static"
 
     elif env["platform"] == "linux":
