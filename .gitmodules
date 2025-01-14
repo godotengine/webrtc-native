@@ -7,6 +7,6 @@
 [submodule "libdatachannel"]
 	path = thirdparty/libdatachannel
 	url = https://github.com/paullouisageneau/libdatachannel.git
-[submodule "openssl"]
-	path = thirdparty/openssl
-	url = https://github.com/openssl/openssl.git
+[submodule "mbedtls"]
+	path = thirdparty/mbedtls
+	url = https://github.com/Mbed-TLS/mbedtls.git
