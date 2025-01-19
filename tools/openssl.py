@@ -50,6 +50,7 @@ def ssl_platform_target(env):
             targets = {
                 "x86_32": "VC-WIN32",
                 "x86_64": "VC-WIN64A",
+                "arm64": "VC-WIN64-ARM"
             }
         else:
             targets = {
