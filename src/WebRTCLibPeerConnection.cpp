@@ -196,6 +196,24 @@ Error WebRTCLibPeerConnection::_initialize(const Dictionary &p_config) {
 			ERR_FAIL_COND_V(err != OK, FAILED);
 		}
 	}
+	if (p_config.has("libdatachannel") && p_config["libdatachannel"].get_type() == Variant::DICTIONARY) {
+		Dictionary lib_cfg = p_config["libdatachannel"];
+		if (lib_cfg.has("enableIceTcp") && lib_cfg["enableIceTcp"].get_type() == Variant::BOOL) {
+			config.enableIceTcp = lib_cfg["enableIceTcp"].operator bool();
+		}
+		if (lib_cfg.has("enableIceUdpMux") && lib_cfg["enableIceUdpMux"].get_type() == Variant::BOOL) {
+			config.enableIceUdpMux = lib_cfg["enableIceUdpMux"].operator bool();
+		}
+		if (lib_cfg.has("portRangeBegin") && lib_cfg["portRangeBegin"].get_type() == Variant::INT) {
+			config.portRangeBegin = lib_cfg["portRangeBegin"].operator int();
+		}
+		if (lib_cfg.has("portRangeEnd") && lib_cfg["portRangeEnd"].get_type() == Variant::INT) {
+			config.portRangeEnd = lib_cfg["portRangeEnd"].operator int();
+		}
+		if (lib_cfg.has("mtu") && lib_cfg["mtu"].get_type() == Variant::INT) {
+			config.mtu = lib_cfg["mtu"].operator int();
+		}
+	}
 	return _create_pc(config);
 }
 
