@@ -8,7 +8,7 @@ env:
 jobs:
   static-checks:
     name: 📊 Static Checks (clang-format, black format, file format)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,13 +50,13 @@ jobs:
             arch: 'x86_64'
             gdnative_flags: 'android_arch=x86_64'
             sconsflags: ''
-            os: 'ubuntu-20.04'
+            os: 'ubuntu-22.04'
             cache-name: android-x86_64
           - platform: android
             arch: 'arm64'
             gdnative_flags: 'android_arch=arm64v8'
             sconsflags: ''
-            os: 'ubuntu-20.04'
+            os: 'ubuntu-22.04'
             cache-name: android-arm64
 
           # iOS
@@ -79,28 +79,28 @@ jobs:
             buildroot: 'i686-godot-linux-gnu_sdk-buildroot'
             gdnative_flags: 'bits=32'
             sconsflags: ''
-            os: 'ubuntu-20.04'
+            os: 'ubuntu-22.04'
             cache-name: linux-x86_32
           - platform: linux
             arch: 'x86_64'
             buildroot: 'x86_64-godot-linux-gnu_sdk-buildroot'
             gdnative_flags: 'bits=64'
             sconsflags: ''
-            os: 'ubuntu-20.04'
+            os: 'ubuntu-22.04'
             cache-name: linux-x86_64
           - platform: linux
             arch: 'arm32'
             buildroot: 'arm-godot-linux-gnueabihf_sdk-buildroot'
             gdnative_flags: 'bits=32'
             sconsflags: ''
-            os: 'ubuntu-20.04'
+            os: 'ubuntu-22.04'
             cache-name: linux-arm32
           - platform: linux
             arch: 'arm64'
             buildroot: 'aarch64-godot-linux-gnu_sdk-buildroot'
             gdnative_flags: 'bits=64'
             sconsflags: ''
-            os: 'ubuntu-20.04'
+            os: 'ubuntu-22.04'
             cache-name: linux-arm64
 
           # macOS
@@ -116,14 +116,14 @@ jobs:
             arch: 'x86_32'
             gdnative_flags: 'bits=32'
             sconsflags: 'use_mingw=yes'
-            os: 'ubuntu-20.04'
+            os: 'ubuntu-22.04'
             msvc_arch: amd64_x86
             cache-name: win-x86_32
           - platform: windows
             arch: 'x86_64'
             gdnative_flags: 'bits=64'
             sconsflags: 'use_mingw=yes'
-            os: 'ubuntu-20.04'
+            os: 'ubuntu-22.04'
             msvc_arch: amd64
             cache-name: win-x86_64
 
