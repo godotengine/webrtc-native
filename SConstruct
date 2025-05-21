@@ -132,6 +132,12 @@ if cpp_env.get("is_msvc", False):
     replace_flags(env["CCFLAGS"], {"/MT": "/MD"})
     replace_flags(cpp_env["CCFLAGS"], {"/MT": "/MD"})
 
+if env["platform"] == "ios":
+    if env["ios_simulator"]:
+        env.AppendUnique(LINKFLAGS=["-mios-simulator-version-min=" + ARGUMENTS["ios_min_version"]])
+    else:
+        env.AppendUnique(LINKFLAGS=["-miphoneos-version-min=" + ARGUMENTS["ios_min_version"]])
+
 # Should probably go to upstream godot-cpp.
 # We let SCons build its default ENV as it includes OS-specific things which we don't
 # want to have to pull in manually.
