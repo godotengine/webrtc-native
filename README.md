@@ -7,7 +7,7 @@
 
 ### Compiling
 
-Clone this repository with the following command to checkout all the dependencies: [godot-cpp](https://github.com/godotengine/godot-cpp), [openssl](https://www.openssl.org/) and [libdatachannel](https://github.com/paullouisageneau/libdatachannel) (and sub-dependencies).
+Clone this repository with the following command to checkout all the dependencies: [godot-cpp](https://github.com/godotengine/godot-cpp), [mbedTLS](https://github.com/Mbed-TLS/mbedtls) and [libdatachannel](https://github.com/paullouisageneau/libdatachannel) (and sub-dependencies).
 
 ```
 $ git clone --recurse-submodules https://github.com/godotengine/webrtc-native.git
