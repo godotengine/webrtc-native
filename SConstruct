@@ -127,11 +127,6 @@ else:
     cpp_env = SConscript(sconstruct)
     env = cpp_env.Clone()
 
-if cpp_env.get("is_msvc", False):
-    # Make sure we don't build with static cpp on MSVC (default in recent godot-cpp versions).
-    replace_flags(env["CCFLAGS"], {"/MT": "/MD"})
-    replace_flags(cpp_env["CCFLAGS"], {"/MT": "/MD"})
-
 if env["platform"] == "ios":
     if env["ios_simulator"]:
         env.AppendUnique(LINKFLAGS=["-mios-simulator-version-min=" + ARGUMENTS["ios_min_version"]])

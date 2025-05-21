@@ -128,6 +128,12 @@ jobs:
             os: 'ubuntu-22.04'
             msvc_arch: amd64
             cache-name: win-x86_64
+          - platform: windows
+            arch: 'arm64'
+            gdnative_flags: ''
+            sconsflags: ''
+            os: 'windows-latest'
+            cache-name: win-arm64
 
     env:
       SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
@@ -149,7 +155,7 @@ jobs:
         continue-on-error: true
 
       - name: Install Windows build dependencies
-        if: ${{ matrix.platform == 'windows' }}
+        if: ${{ matrix.platform == 'windows' && matrix.os != 'windows-latest' }}
         run: |
           sudo apt-get update
           sudo apt-get install build-essential mingw-w64
@@ -211,6 +217,13 @@ jobs:
           patch -p1 < misc/patches/build_profile.diff
           patch -p1 < misc/patches/build_profile_3.x.diff
 
+      - name: Use updated windows tools.
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          rm /usr/bin/link  # GNU linkker conflicts with MSVC linkes
+          cp misc/patches/windows.py godot-cpp/tools/windows.py
+          cp misc/patches/common_compiler_flags.py godot-cpp/tools/common_compiler_flags.py
+
       - name: Print tools versions
         run: |
           python --version
@@ -226,6 +239,7 @@ jobs:
           scons target=template_release godot_version=4
 
       - name: Compile GDNative (3.5+) - release ${{ matrix.platform }} - ${{ matrix.arch }}
+        if: ${{ ! (matrix.platform == 'windows' && matrix.os == 'windows-latest' && matrix.arch == 'arm64') }}
         run: |
           scons target=release generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
 

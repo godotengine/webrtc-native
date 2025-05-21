@@ -27,6 +27,8 @@ fi
 
 CURDIR=$(pwd)
 cd "${DESTINATION}/${VERSION}"
+# Clear unneded windows files
+rm ${TYPE}/lib/*.pdb ${TYPE}/lib/*.exp ${TYPE}/lib/*.lib || echo "Nothing to delete"
 zip -r ../godot-${VERSION}-${TYPE}.zip ${TYPE}
 cd "$CURDIR"
 
