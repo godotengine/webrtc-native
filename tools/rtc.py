@@ -4,6 +4,7 @@ def build_library(env, mbedtls):
         "CMAKE_CXX_FLAGS": "-DMBEDTLS_SSL_DTLS_SRTP",
         "USE_NICE": 0,
         "NO_WEBSOCKET": 1,
+        "CMAKE_POLICY_VERSION_MINIMUM": "3.5",  # Tempoarily needed for CMake 4 support.
         "NO_EXAMPLES": 1,
         "NO_TESTS": 1,
         "BUILD_WITH_WARNINGS": "0",  # Disables werror in libsrtp.
