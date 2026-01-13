@@ -13,9 +13,11 @@ def build_library(env, mbedtls):
         "MbedX509_LIBRARY": env["MBEDTLS_X509_LIBRARY"],
         "MbedTLS_INCLUDE_DIR": env["MBEDTLS_INCLUDE"],
     }
-    is_msvc = env.get("is_msvc", False)
-    lib_ext = ".lib" if is_msvc else ".a"
-    lib_prefix = "" if is_msvc else "lib"
+    if env["platform"] == "windows" and not env.msvc:
+        rtc_config["ENABLE_WARNINGS_AS_ERRORS"] = 0
+
+    lib_ext = ".lib" if env.msvc else ".a"
+    lib_prefix = "" if env.msvc else "lib"
     rtc_libs = [
         "{}datachannel-static{}".format(lib_prefix, lib_ext),
         "deps/libjuice/{}juice-static{}".format(lib_prefix, lib_ext),
