@@ -6,6 +6,7 @@ def build_library(env, mbedtls):
         "NO_WEBSOCKET": 1,
         "NO_EXAMPLES": 1,
         "NO_TESTS": 1,
+        "ENABLE_WARNINGS_AS_ERRORS": 0 if env["platform"] == "windows" and not env.get("is_msvc", False) else 1,
         "BUILD_WITH_WARNINGS": "0",  # Disables werror in libsrtp.
         "USE_MBEDTLS": 1,
         "MbedTLS_LIBRARY": env["MBEDTLS_LIBRARY"],
