@@ -127,7 +127,9 @@ else:
     cpp_env = SConscript(sconstruct)
     env = cpp_env.Clone()
 
-if cpp_env.get("is_msvc", False):
+env.__class__.msvc = env.get("is_msvc", False)
+
+if env.msvc:
     # Make sure we don't build with static cpp on MSVC (default in recent godot-cpp versions).
     replace_flags(env["CCFLAGS"], {"/MT": "/MD"})
     replace_flags(cpp_env["CCFLAGS"], {"/MT": "/MD"})

@@ -1,11 +1,10 @@
 def build_library(env):
     mbedtls_bin = env.Dir("bin/thirdparty/mbedtls/{}/{}/install".format(env["platform"], env["arch"]))
-    is_msvc = env.get("is_msvc", False)
     c_flags = "-DMBEDTLS_SSL_DTLS_SRTP"
     if env["platform"] == "linux":
         # This is needed on some arch when building with the godot buildroot toolchain
         c_flags += " -fPIC"
-    elif env["platform"] == "windows" and not is_msvc:
+    elif env["platform"] == "windows" and not env.msvc:
         c_flags += " -D__USE_MINGW_ANSI_STDIO=0"  # See https://github.com/Mbed-TLS/mbedtls/issues/10161
 
     mbedtls_config = {
@@ -13,12 +12,12 @@ def build_library(env):
         "ENABLE_TESTING": 0,
         "ENABLE_PROGRAMS": 0,
         "CMAKE_INSTALL_PREFIX": env.Dir(mbedtls_bin).abspath,
-        "CMAKE_INSTALL_LIBDIR": "lib",
         "CMAKE_C_FLAGS": c_flags,
         "MBEDTLS_FATAL_WARNINGS": 0,
+        "CMAKE_INSTALL_LIBDIR": "lib",
     }
-    lib_ext = ".lib" if is_msvc else ".a"
-    lib_prefix = "" if is_msvc else "lib"
+    lib_ext = ".lib" if env.msvc else ".a"
+    lib_prefix = "" if env.msvc else "lib"
     mbedtls_libs = [
         "/install/lib/{}mbedtls{}".format(lib_prefix, lib_ext),
         "/install/lib/{}mbedx509{}".format(lib_prefix, lib_ext),
@@ -57,7 +56,7 @@ def exists(env):
 
 def generate(env):
     mbedtls_install_dir = "bin/thirdparty/mbedtls/{}/{}/install".format(env["platform"], env["arch"])
-    lib_ext = ".lib" if env.get("is_msvc", False) else ".a"
+    lib_ext = ".lib" if env.msvc else ".a"
     mbedtls = env.File(mbedtls_install_dir + "/lib/libmbedtls" + lib_ext)
     crypto = env.File(mbedtls_install_dir + "/lib/libmbedcrypto" + lib_ext)
     x509 = env.File(mbedtls_install_dir + "/lib/libmbedx509" + lib_ext)
