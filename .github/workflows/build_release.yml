@@ -4,6 +4,8 @@ on: [push, pull_request]
 env:
   # Only used for the cache key. Increment version to force clean build.
   GODOT_BASE_BRANCH: master
+  # LLVM version
+  MINGW_LLVM_VERSION: "20260616"
   # Hardcoding this seem to be the only way
   ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/28.1.13356709/
 
@@ -119,15 +121,19 @@ jobs:
             gdnative_flags: 'bits=32'
             sconsflags: 'use_mingw=yes'
             os: 'ubuntu-22.04'
-            msvc_arch: amd64_x86
             cache-name: win-x86_32
           - platform: windows
             arch: 'x86_64'
             gdnative_flags: 'bits=64'
             sconsflags: 'use_mingw=yes'
             os: 'ubuntu-22.04'
-            msvc_arch: amd64
             cache-name: win-x86_64
+          - platform: windows
+            arch: 'arm64'
+            sconsflags: 'use_mingw=yes use_llvm=yes'
+            os: 'ubuntu-22.04'
+            cache-name: win-arm64
+            skip_gdnative: true
 
     env:
       SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
@@ -148,8 +154,27 @@ jobs:
           cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
 
-      - name: Install Windows build dependencies
-        if: ${{ matrix.platform == 'windows' }}
+      - name: Setup Windows MinGW toolchain cache
+        if: ${{ matrix.platform == 'windows' && matrix.arch == 'arm64' }}
+        uses: actions/cache@v5
+        with:
+          path: |
+            llvm-mingw-$MINGW_LLVM_VERSION-ucrt-ubuntu-22.04-x86_64.tar.bz2
+          key: llvm-mingw-$MINGW_LLVM_VERSION-ucrt-ubuntu-22.04-x86_64
+
+      - name: Install mingw-LLVM
+        if: ${{ matrix.platform == 'windows' && matrix.arch == 'arm64' }}
+        run: |
+          NAME=llvm-mingw-$MINGW_LLVM_VERSION-ucrt-ubuntu-22.04-x86_64
+          URL="https://github.com/mstorsjo/llvm-mingw/releases/download/$MINGW_LLVM_VERSION/$NAME.tar.xz"
+          if [ ! -f $NAME.bz2 ]; then
+            wget $URL
+          fi
+          tar -xJf $NAME.tar.xz
+          echo "$GITHUB_WORKSPACE/$NAME/bin" >> $GITHUB_PATH
+
+      - name: Install mingw-GCC
+        if: ${{ matrix.platform == 'windows' && matrix.arch != 'arm64' }}
         run: |
           sudo apt-get update
           sudo apt-get install build-essential mingw-w64
@@ -224,6 +249,7 @@ jobs:
           scons target=template_release godot_version=4
 
       - name: Compile GDNative (3.5+) - release ${{ matrix.platform }} - ${{ matrix.arch }}
+        if: ${{ ! ( matrix.skip_gdnative || false ) }}
         run: |
           scons target=release generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
 
