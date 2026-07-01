@@ -1,8 +1,8 @@
 diff --git a/godot-cpp-3.x/SConstruct b/godot-cpp-3.x/SConstruct
-index f653d54..483f190 100644
+index 4d8f30b..ec1f393 100644
 --- a/godot-cpp-3.x/SConstruct
 +++ b/godot-cpp-3.x/SConstruct
-@@ -3,7 +3,42 @@
+@@ -4,7 +4,42 @@ import codecs
  import os
  import sys
  import subprocess
@@ -44,9 +44,9 @@ index f653d54..483f190 100644
 +    return None
 +
  
- if sys.version_info < (3,):
  
-@@ -170,6 +205,14 @@ opts.Add(
+ # Workaround for MinGW. See:
+@@ -160,6 +195,14 @@ opts.Add(
          True,
      )
  )

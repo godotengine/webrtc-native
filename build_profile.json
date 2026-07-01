@@ -1,5 +1,6 @@
 {
 	"enabled_classes": [
+		"OS",
 		"WebRTCDataChannelExtension",
 		"WebRTCPeerConnectionExtension",
 		"WebRTCDataChannelGDNative",
