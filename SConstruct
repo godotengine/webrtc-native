@@ -203,8 +203,8 @@ env.Depends(sources, rtc + mbedtls)
 # symbols using a GCC version script, or we might end up overriding symbols from other libraries.
 # Using "-fvisibility=hidden" will not work, since libstdc++ explicitly exports its symbols.
 symbols_file = None
-if env["platform"] == "linux" or (
-    env["platform"] == "windows" and env.get("use_mingw", False) and not env.get("use_llvm", False)
+if not env.get("use_llvm", False) and (
+    env["platform"] == "linux" or (env["platform"] == "windows" and env.get("use_mingw", False))
 ):
     if env["godot_version"] == "3":
         symbols_file = env.File("misc/gcc/symbols-gdnative.map")
