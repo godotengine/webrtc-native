@@ -12,34 +12,24 @@ env:
 jobs:
   static-checks:
     name: 📊 Static Checks (clang-format, black format, file format)
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Treeless clone. Slightly less performant than a shallow clone, but makes finding diffs instantaneous.
+          filter: tree:0 # See: https://github.blog/open-source/git/get-up-to-speed-with-partial-clone-and-shallow-clone/
 
-      - name: Install dependencies
+      # This needs to happen before Python and npm execution; it must happen before any extra files are written.
+      - name: .gitignore checks (gitignore_check.sh)
         run: |
-          # Add clang repository (so we have clang-format-14)
-          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          sudo apt-add-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main"
-          sudo apt-get update
-          # Install required deps
-          sudo apt-get install -qq dos2unix moreutils recode clang-format-14
-          sudo update-alternatives --remove-all clang-format
-          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 100
-          sudo pip3 install black==22.3.0 pygments
+          bash ./misc/scripts/gitignore_check.sh
 
-      - name: File formatting checks (file_format.sh)
-        run: |
-          bash ./misc/scripts/file_format.sh
-
-      - name: Style checks via clang-format (clang_format.sh)
-        run: |
-          bash ./misc/scripts/clang_format.sh
-
-      - name: Python style checks via black (black_format.sh)
-        run: |
-          bash ./misc/scripts/black_format.sh
+      - name: Style checks via prek
+        uses: j178/prek-action@v2
+        with:
+          extra-args: "-a"
 
   build:
     runs-on: ${{ matrix.os }}
@@ -148,10 +138,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Godot build cache
-        uses: ./.github/actions/godot-cache
+      - name: Restore Godot build cache
+        uses: ./.github/actions/godot-cache-restore
         with:
           cache-name: ${{ matrix.cache-name }}
+          scons-cache: ${{ env.SCONS_CACHE }}
         continue-on-error: true
 
       - name: Setup Windows MinGW toolchain cache
@@ -252,6 +243,13 @@ jobs:
         if: ${{ ! ( matrix.skip_gdnative || false ) }}
         run: |
           scons target=release generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
+
+      - name: Save Godot build cache
+        uses: ./.github/actions/godot-cache-save
+        with:
+          cache-name: ${{ matrix.cache-name }}
+          scons-cache: ${{ env.SCONS_CACHE }}
+        continue-on-error: true
 
       - uses: actions/upload-artifact@v7
         with:

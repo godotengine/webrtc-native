@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef WEBRTC_DATA_CHANNEL_H
-#define WEBRTC_DATA_CHANNEL_H
+#pragma once
 
 #ifdef GDNATIVE_WEBRTC
 #include <Godot.hpp> // Godot.hpp must go first, or windows builds breaks
@@ -110,5 +109,3 @@ public:
 };
 
 } // namespace godot_webrtc
-
-#endif // WEBRTC_DATA_CHANNEL_H
