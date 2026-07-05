@@ -1,7 +1,8 @@
 #!python
+# ruff: noqa: F821
 
-import os, sys, platform, json, subprocess
-import SCons
+import os
+import sys
 
 
 def add_sources(sources, dirpath, extension):
@@ -46,7 +47,7 @@ if "macos_deployment_target" not in ARGUMENTS:
     ARGUMENTS["macos_deployment_target"] = "11.0"
 if "android_api_level" not in ARGUMENTS:
     ARGUMENTS["android_api_level"] = "28"
-# Godot CPP (4.3+) default API verison
+# Godot CPP (4.3+) default API version
 if "api_version" not in ARGUMENTS:
     ARGUMENTS["api_version"] = "4.3"
 
@@ -169,12 +170,10 @@ else:
 env.Append(CPPPATH=["src/"])
 env.Append(CPPDEFINES=["RTC_STATIC"])
 sources = []
-sources.append(
-    [
-        "src/WebRTCLibDataChannel.cpp",
-        "src/WebRTCLibPeerConnection.cpp",
-    ]
-)
+sources.append([
+    "src/WebRTCLibDataChannel.cpp",
+    "src/WebRTCLibPeerConnection.cpp",
+])
 if env["godot_version"] == "3":
     env.Append(CPPDEFINES=["GDNATIVE_WEBRTC"])
     sources.append("src/init_gdnative.cpp")

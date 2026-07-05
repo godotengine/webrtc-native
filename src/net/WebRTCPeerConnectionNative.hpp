@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef WEBRTC_PEER_NATIVE
-#define WEBRTC_PEER_NATIVE
+#pragma once
 
 #include <Godot.hpp>
 #include <Reference.hpp>
@@ -113,5 +112,3 @@ public:
 };
 
 }; // namespace godot
-
-#endif // WEBRTC_PEER_NATIVE

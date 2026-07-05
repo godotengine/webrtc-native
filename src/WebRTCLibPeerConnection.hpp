@@ -28,8 +28,7 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef WEBRTC_PEER_H
-#define WEBRTC_PEER_H
+#pragma once
 
 #ifdef GDNATIVE_WEBRTC
 #include <Godot.hpp> // Godot.hpp must go first, or windows builds breaks
@@ -137,5 +136,3 @@ private:
 };
 
 } // namespace godot_webrtc
-
-#endif // WEBRTC_PEER_H
