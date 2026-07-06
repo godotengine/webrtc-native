@@ -31,25 +31,25 @@
 #pragma once
 
 #ifdef GDNATIVE_WEBRTC
-#include <Godot.hpp> // Godot.hpp must go first, or windows builds breaks
-
 #include "net/WebRTCDataChannelNative.hpp"
+
 #define WebRTCDataChannelExtension WebRTCDataChannelNative
 #if !defined(GDCLASS)
 #define GDCLASS(arg1, arg2) GODOT_CLASS(arg1, arg2)
 #endif
 #else
+/* clang-format off */
 #include <godot_cpp/core/binder_common.hpp>
-
+/* clang-format on */
 #include <godot_cpp/classes/global_constants_binds.hpp>
 #include <godot_cpp/classes/web_rtc_data_channel_extension.hpp>
 #endif
 
+#include <rtc/rtc.hpp>
+
 #include <mutex>
 #include <queue>
 #include <utility>
-
-#include "rtc/rtc.hpp"
 
 namespace godot_webrtc {
 
