@@ -28,6 +28,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#ifndef GDNATIVE_WEBRTC
+
 #include "WebRTCLibDataChannel.hpp"
 #include "WebRTCLibPeerConnection.hpp"
 
@@ -75,3 +77,5 @@ GDExtensionBool GDE_EXPORT webrtc_extension_init(const GDExtensionInterfaceGetPr
 	return init_obj.init();
 }
 }
+
+#endif
