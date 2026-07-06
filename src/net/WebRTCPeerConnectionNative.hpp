@@ -30,10 +30,9 @@
 
 #pragma once
 
-#include <Godot.hpp>
+#include <Godot.hpp> // Godot.hpp must go first, or windows builds breaks
 #include <Reference.hpp>
 #include <WebRTCPeerConnectionGDNative.hpp>
-
 #include <net/godot_net.h>
 
 /* Forward declare interface functions */

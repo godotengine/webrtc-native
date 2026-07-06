@@ -31,6 +31,7 @@
 #include "WebRTCLibDataChannel.hpp"
 #include "WebRTCLibPeerConnection.hpp"
 #include "net/WebRTCPeerConnectionNative.hpp"
+
 #include <gdnative_api_struct.gen.h>
 #include <net/godot_net.h>
 
@@ -99,8 +100,9 @@ extern "C" void GDN_EXPORT godot_gdnative_singleton() {
 		ERR_FAIL_COND(!_set_library_mb);
 		// If registration is successful _singleton will be set to true
 		_singleton = godot::WebRTCPeerConnectionNative::_net_api->godot_net_set_webrtc_library(&library) == GODOT_OK;
-		if (!_singleton)
+		if (!_singleton) {
 			ERR_PRINT("Failed initializing webrtc singleton library");
+		}
 	}
 }
 
@@ -108,13 +110,15 @@ extern "C" void GDN_EXPORT godot_gdnative_singleton() {
 extern "C" void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *o) {
 	const godot_gdnative_core_api_struct *api = o->api_struct;
 	for (int i = 0; i < api->num_extensions; i++) {
-		if (api->extensions[i]->type != GDNATIVE_EXT_NET)
+		if (api->extensions[i]->type != GDNATIVE_EXT_NET) {
 			continue;
+		}
 
 		const godot_gdnative_ext_net_api_struct *net_api = (godot_gdnative_ext_net_api_struct *)api->extensions[i];
 
-		if (!net_api->next)
+		if (!net_api->next) {
 			break;
+		}
 
 		if (net_api->next->version.major == 3 && net_api->next->version.minor == 2) {
 			godot::WebRTCPeerConnectionNative::_net_api = (const godot_gdnative_ext_net_3_2_api_struct *)net_api->next;
