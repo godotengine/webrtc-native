@@ -167,10 +167,13 @@ if env["platform"] == "macos" and os.environ.get("OSXCROSS_ROOT", ""):
 opts.Update(env)
 
 target = env["target"]
+addon_name = "webrtc_native"
 if env["godot_version"] == "3":
-    result_path = os.path.join("bin", "gdnative", "webrtc" if env["target"] == "release" else "webrtc_debug")
+    if env["target"] != "release":
+        addon_name = "webrtc_native_debug"
+    result_path = os.path.join("bin", "gdnative", "addons", addon_name)
 else:
-    result_path = os.path.join("bin", "extension", "webrtc")
+    result_path = os.path.join("bin", "extension", "addons", addon_name)
 
 # Our includes and sources
 env.Append(CPPPATH=["src/"])
@@ -238,17 +241,16 @@ Default(library)
 
 # GDNativeLibrary
 if env["godot_version"] == "3":
-    gdnlib = "webrtc" if target != "debug" else "webrtc_debug"
     ext = ".tres"
     extfile = env.Substfile(
-        os.path.join(result_path, gdnlib + ext),
-        "misc/webrtc" + ext,
+        os.path.join(result_path, addon_name + ".tres"),
+        "misc/cfg.tres",
         SUBST_DICT={
-            "{GDNATIVE_PATH}": gdnlib,
+            "{GDNATIVE_PATH}": "addons/" + addon_name,
             "{TARGET}": "template_" + env["target"],
         },
     )
 else:
-    extfile = env.InstallAs(os.path.join(result_path, "webrtc.gdextension"), "misc/webrtc.gdextension")
+    extfile = env.InstallAs(os.path.join(result_path, addon_name + ".gdextension"), "misc/cfg.gdextension")
 
 Default(extfile)
