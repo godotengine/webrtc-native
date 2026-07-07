@@ -41,7 +41,7 @@ Module location:
 ## mbedTLS
 
 - Upstream: https://github.com/Mbed-TLS/mbedtls.git
-- Version: 3.6.6 (0bebf8b8c7f07abe3571ded48a11aa907a1ffb20, 2026)
+- Version: 3.6.7 (068ff080b369adfac81509f9b57b2afabaf82dc5, 2026)
 - License: Apache 2.0
 
 Module location:
