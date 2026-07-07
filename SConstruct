@@ -5,10 +5,16 @@ import os
 import sys
 
 
-def add_sources(sources, dirpath, extension):
+def add_sources(env, sources, dirpath, extension):
     for f in os.listdir(dirpath):
         if f.endswith("." + extension):
-            sources.append(dirpath + "/" + f)
+            ver = ".gdnative" if env["godot_version"] == "3" else ".extension"
+            sources.append(
+                env.SharedObject(
+                    "{}/{}".format(dirpath, f),
+                    SHOBJSUFFIX="{}{}{}".format(ver, env["suffix"], env["SHOBJSUFFIX"]),
+                )
+            )
 
 
 def replace_flags(flags, replaces):
@@ -170,16 +176,10 @@ else:
 env.Append(CPPPATH=["src/"])
 env.Append(CPPDEFINES=["RTC_STATIC"])
 sources = []
-sources.append([
-    "src/WebRTCLibDataChannel.cpp",
-    "src/WebRTCLibPeerConnection.cpp",
-])
+add_sources(env, sources, "src/", "cpp")
 if env["godot_version"] == "3":
     env.Append(CPPDEFINES=["GDNATIVE_WEBRTC"])
-    sources.append("src/init_gdnative.cpp")
-    add_sources(sources, "src/net/", "cpp")
-else:
-    sources.append("src/init_gdextension.cpp")
+    add_sources(env, sources, "src/net/", "cpp")
 
 # Add our build tools
 for tool in ["cmake", "mbedtls", "rtc"]:

@@ -28,6 +28,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
+#ifdef GDNATIVE_WEBRTC
+
 #include "WebRTCLibDataChannel.hpp"
 #include "WebRTCLibPeerConnection.hpp"
 #include "net/WebRTCPeerConnectionNative.hpp"
@@ -143,3 +145,5 @@ extern "C" void GDN_EXPORT godot_nativescript_init(void *handle) {
 	godot::register_class<godot_webrtc::WebRTCLibPeerConnection>();
 	godot::register_class<godot_webrtc::WebRTCLibDataChannel>();
 }
+
+#endif
