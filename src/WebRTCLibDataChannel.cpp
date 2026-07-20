@@ -48,7 +48,11 @@ using namespace godot;
 using namespace godot_webrtc;
 
 // DataChannel
+#ifdef GDNATIVE_WEBRTC
 WebRTCLibDataChannel *WebRTCLibDataChannel::new_data_channel(std::shared_ptr<rtc::DataChannel> p_channel, bool p_negotiated) {
+#else
+Ref<WebRTCLibDataChannel> WebRTCLibDataChannel::new_data_channel(std::shared_ptr<rtc::DataChannel> p_channel, bool p_negotiated) {
+#endif
 	// Invalid channel result in NULL return
 	ERR_FAIL_COND_V(!p_channel, nullptr);
 
@@ -62,7 +66,7 @@ WebRTCLibDataChannel *WebRTCLibDataChannel::new_data_channel(std::shared_ptr<rtc
 	native->set_script(script);
 	WebRTCLibDataChannel *out = native->cast_to<WebRTCLibDataChannel>(native);
 #else
-	WebRTCLibDataChannel *out = memnew(WebRTCLibDataChannel);
+	Ref<WebRTCLibDataChannel> out = memnew(WebRTCLibDataChannel);
 #endif
 	// Bind the library data channel to our object.
 	out->bind_channel(p_channel, p_negotiated);
