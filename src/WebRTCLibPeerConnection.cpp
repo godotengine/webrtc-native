@@ -45,6 +45,7 @@ using namespace godot_webrtc;
 #include <godot_cpp/variant/utility_functions.hpp>
 #define VERBOSE_PRINT(str) UtilityFunctions::print_verbose(str)
 #endif
+
 void LogCallback(rtc::LogLevel level, std::string message) {
 	switch (level) {
 		case rtc::LogLevel::Fatal:
@@ -187,6 +188,7 @@ WebRTCLibPeerConnection::SignalingState WebRTCLibPeerConnection::_get_signaling_
 }
 
 Error WebRTCLibPeerConnection::_initialize(const Dictionary &p_config) {
+	_close();
 	rtc::Configuration config = {};
 	if (p_config.has("iceServers") && p_config["iceServers"].get_type() == Variant::ARRAY) {
 		Array servers = p_config["iceServers"];
@@ -293,12 +295,16 @@ Error WebRTCLibPeerConnection::_add_ice_candidate(const String &sdpMidName, int3
 Error WebRTCLibPeerConnection::_poll() {
 	ERR_FAIL_COND_V(!peer_connection, ERR_UNCONFIGURED);
 
-	while (!signal_queue.empty()) {
-		mutex_signal_queue->lock();
-		Signal signal = signal_queue.front();
-		signal_queue.pop();
-		mutex_signal_queue->unlock();
-		signal.emit(this);
+	std::queue<std::function<void(Object *)>> local_queue;
+	{
+		std::unique_lock lock(shared_state->mutex);
+		local_queue.swap(shared_state->tasks_queue);
+	}
+
+	while (!local_queue.empty()) {
+		std::function<void(Object *)> f = local_queue.front();
+		f(this);
+		local_queue.pop();
 	}
 	return OK;
 }
@@ -311,17 +317,13 @@ void WebRTCLibPeerConnection::_close() {
 		}
 	}
 
-	while (!signal_queue.empty()) {
-		signal_queue.pop();
-	}
+	shared_state = std::make_shared<SharedState>();
 }
 
 void WebRTCLibPeerConnection::_init() {
 #ifdef GDNATIVE_WEBRTC
 	register_interface(&interface);
 #endif
-	mutex_signal_queue = new std::mutex;
-
 	_initialize(Dictionary());
 }
 
@@ -332,26 +334,35 @@ Error WebRTCLibPeerConnection::_create_pc(rtc::Configuration &r_config) try {
 	peer_connection = std::make_shared<rtc::PeerConnection>(r_config);
 	ERR_FAIL_COND_V(!peer_connection, FAILED);
 
-	// Binding this should be fine as long as we call close when going out of scope.
-	peer_connection->onLocalDescription([this](rtc::Description description) {
-		String type = description.type() == rtc::Description::Type::Offer ? "offer" : "answer";
-		queue_signal("session_description_created", 2, type, String(std::string(description).c_str()));
-	});
-	peer_connection->onLocalCandidate([this](rtc::Candidate candidate) {
-		queue_signal("ice_candidate_created", 3, String(candidate.mid().c_str()), 0, String(candidate.candidate().c_str()));
-	});
-	peer_connection->onDataChannel([this](std::shared_ptr<rtc::DataChannel> channel) {
-		queue_signal("data_channel_received", 1, WebRTCLibDataChannel::new_data_channel(channel, false));
-	});
-	/*
-	peer_connection->onStateChange([](rtc::PeerConnection::State state) {
-		std::cout << "[State: " << state << "]" << std::endl;
-	});
+	auto queue_task = [](std::shared_ptr<SharedState> p_state, std::function<void(godot::Object *)> p_task) {
+		if (p_state == nullptr) {
+			return; // Might be empty coming from a weak_ptr.
+		}
+		std::unique_lock lock(p_state->mutex);
+		p_state->tasks_queue.push(p_task);
+	};
 
-	peer_connection->onGatheringStateChange([](rtc::PeerConnection::GatheringState state) {
-		std::cout << "[Gathering State: " << state << "]" << std::endl;
+	// Binding this should be fine as long as we call close when going out of scope.
+	peer_connection->onLocalDescription([s = std::weak_ptr<SharedState>(shared_state), queue_task](rtc::Description description) {
+		String type = description.type() == rtc::Description::Type::Offer ? "offer" : "answer";
+		String desc = String(std::string(description).c_str());
+		queue_task(s.lock(), [type, desc](Object *p_obj) {
+			p_obj->emit_signal("session_description_created", type, desc);
+		});
 	});
-	*/
+	peer_connection->onLocalCandidate([s = std::weak_ptr<SharedState>(shared_state), queue_task](rtc::Candidate candidate) {
+		String mid = String(candidate.mid().c_str());
+		String cand = String(candidate.candidate().c_str());
+		queue_task(s.lock(), [mid, cand](Object *p_obj) {
+			p_obj->emit_signal("ice_candidate_created", mid, 0, cand);
+		});
+	});
+	peer_connection->onDataChannel([s = std::weak_ptr<SharedState>(shared_state), queue_task](std::shared_ptr<rtc::DataChannel> channel) {
+		Ref<WebRTCLibDataChannel> ch = Ref<WebRTCLibDataChannel>(WebRTCLibDataChannel::new_data_channel(channel, false));
+		queue_task(s.lock(), [ch](Object *p_obj) {
+			p_obj->emit_signal("data_channel_received", ch);
+		});
+	});
 	return OK;
 } catch (const std::exception &e) {
 	ERR_PRINT(e.what());
@@ -371,12 +382,4 @@ WebRTCLibPeerConnection::~WebRTCLibPeerConnection() {
 	}
 #endif
 	_close();
-	delete mutex_signal_queue;
-}
-
-void WebRTCLibPeerConnection::queue_signal(String p_name, int p_argc, const Variant &p_arg1, const Variant &p_arg2, const Variant &p_arg3) {
-	mutex_signal_queue->lock();
-	const Variant argv[3] = { p_arg1, p_arg2, p_arg3 };
-	signal_queue.push(Signal(p_name, p_argc, argv));
-	mutex_signal_queue->unlock();
 }
