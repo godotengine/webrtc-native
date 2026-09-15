@@ -78,7 +78,11 @@ protected:
 	}
 
 public:
+#ifdef GDNATIVE_WEBRTC
 	static WebRTCLibDataChannel *new_data_channel(std::shared_ptr<rtc::DataChannel> p_channel, bool p_negotiated);
+#else
+	static godot::Ref<WebRTCLibDataChannel> new_data_channel(std::shared_ptr<rtc::DataChannel> p_channel, bool p_negotiated);
+#endif
 
 	/* PacketPeer */
 	virtual godot::Error _get_packet(const uint8_t **r_buffer, int32_t *r_len) override;

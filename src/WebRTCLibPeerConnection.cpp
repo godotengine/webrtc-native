@@ -234,8 +234,13 @@ Ref<WebRTCDataChannel> WebRTCLibPeerConnection::_create_data_channel(const Strin
 	std::shared_ptr<rtc::DataChannel> ch = peer_connection->createDataChannel(p_channel.utf8().get_data(), config);
 	ERR_FAIL_COND_V(ch == nullptr, nullptr);
 
+#ifdef GDNATIVE_WEBRTC
 	WebRTCLibDataChannel *wrapper = WebRTCLibDataChannel::new_data_channel(ch, ch->id().has_value());
 	ERR_FAIL_COND_V(wrapper == nullptr, nullptr);
+#else
+	Ref<WebRTCLibDataChannel> wrapper = WebRTCLibDataChannel::new_data_channel(ch, ch->id().has_value());
+	ERR_FAIL_COND_V(wrapper.is_null(), nullptr);
+#endif
 	return wrapper;
 } catch (const std::exception &e) {
 	ERR_PRINT(e.what());
