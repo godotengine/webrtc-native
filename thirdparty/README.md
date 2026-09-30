@@ -8,7 +8,7 @@ readability.
 ## libdatachannel
 
 - Upstream: https://github.com/paullouisageneau/libdatachannel
-- Version: 0.24.5 (443f6934d9007eb7076ab7825ba330f355fcbead, 2026)
+- Version: 0.24.6 (6b1e2e620f1e37f0eafeee702eaea0043cb305fd, 2026)
 - License: MPL 2.0
 
 Module location:
@@ -19,7 +19,7 @@ Module location:
 # libjuice
 
 - Upstream: https://github.com/paullouisageneau/libjuice
-- Version: 1.7.2 (3c40a3545b6b1b62c7adee7f8f2bd58aa290afd6, 2026)
+- Version: 1.7.4 (b89c792e3612faf2f12cf35bcc56857313a06be3, 2026)
 - License: MPL 2.0
 
 Module location:
