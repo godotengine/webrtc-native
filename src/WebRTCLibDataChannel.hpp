@@ -47,6 +47,7 @@
 
 #include <rtc/rtc.hpp>
 
+#include <atomic>
 #include <mutex>
 #include <queue>
 #include <utility>
@@ -58,16 +59,20 @@ class WebRTCLibDataChannel : public godot::WebRTCDataChannelExtension {
 
 private:
 	using QueuedPacket = std::pair<std::vector<uint8_t>, bool>;
-	std::mutex *mutex;
-	std::queue<QueuedPacket> packet_queue;
+	struct SharedState {
+		std::mutex mutex;
+		std::queue<QueuedPacket> packet_queue;
+		std::atomic<uint32_t> available_packets = 0;
+		std::atomic<ChannelState> channel_state = STATE_CONNECTING;
+	};
+
 	QueuedPacket current_packet;
+	std::shared_ptr<SharedState> shared_state = std::make_shared<SharedState>();
 	std::shared_ptr<rtc::DataChannel> channel = nullptr;
 
 	WriteMode write_mode = WRITE_MODE_BINARY;
-	ChannelState channel_state = STATE_CONNECTING;
 	bool negotiated = false;
 
-	void queue_packet(const uint8_t *data, uint32_t size, bool p_is_string);
 	void bind_channel(std::shared_ptr<rtc::DataChannel> p_channel, bool p_negotiated);
 
 protected:

@@ -47,7 +47,6 @@
 using namespace godot;
 using namespace godot_webrtc;
 
-// DataChannel
 WebRTCLibDataChannel *WebRTCLibDataChannel::new_data_channel(std::shared_ptr<rtc::DataChannel> p_channel, bool p_negotiated) {
 	// Invalid channel result in NULL return
 	ERR_FAIL_COND_V(!p_channel, nullptr);
@@ -75,38 +74,43 @@ void WebRTCLibDataChannel::bind_channel(std::shared_ptr<rtc::DataChannel> p_chan
 	channel = p_channel;
 	negotiated = p_negotiated;
 
-	// Binding this should be fine as long as we call close when going out of scope.
-	p_channel->onMessage([this](auto message) {
-		if (std::holds_alternative<rtc::string>(message)) {
-			rtc::string str = std::get<rtc::string>(message);
-			queue_packet(reinterpret_cast<const uint8_t *>(str.c_str()), str.size(), true);
-		} else if (std::holds_alternative<rtc::binary>(message)) {
-			rtc::binary bin = std::get<rtc::binary>(message);
-			queue_packet(reinterpret_cast<const uint8_t *>(&bin[0]), bin.size(), false);
-		} else {
-			ERR_PRINT("Message parsing bug. Unknown message type.");
+	auto queue_packet = [](std::shared_ptr<SharedState> p_state, const uint8_t *data, uint32_t size, bool p_is_string) {
+		if (p_state == nullptr) {
+			return;
 		}
+		std::vector<uint8_t> packet;
+		packet.resize(size);
+		memcpy(&packet[0], data, size);
+
+		std::unique_lock lock(p_state->mutex);
+		p_state->packet_queue.push(QueuedPacket(std::move(packet), p_is_string));
+		p_state->available_packets.store(p_state->packet_queue.size(), std::memory_order_release);
+	};
+
+	auto set_state = [](std::shared_ptr<SharedState> p_state, ChannelState p_channel_state) {
+		if (p_state == nullptr) {
+			return;
+		}
+		p_state->channel_state.store(p_channel_state, std::memory_order_release);
+	};
+
+	// Binding this should be fine as long as we call close when going out of scope.
+	p_channel->onMessage(
+			[s = std::weak_ptr<SharedState>(shared_state), queue_packet](rtc::binary bin) {
+				queue_packet(s.lock(), reinterpret_cast<const uint8_t *>(bin.data()), bin.size(), false);
+			},
+			[s = std::weak_ptr<SharedState>(shared_state), queue_packet](rtc::string str) {
+				queue_packet(s.lock(), reinterpret_cast<const uint8_t *>(str.c_str()), str.size(), true);
+			});
+	p_channel->onOpen([s = std::weak_ptr<SharedState>(shared_state), set_state]() {
+		set_state(s.lock(), STATE_OPEN);
 	});
-	p_channel->onOpen([this]() {
-		channel_state = STATE_OPEN;
-	});
-	p_channel->onClosed([this]() {
-		channel_state = STATE_CLOSED;
+	p_channel->onClosed([s = std::weak_ptr<SharedState>(shared_state), set_state]() {
+		set_state(s.lock(), STATE_CLOSED);
 	});
 	p_channel->onError([](auto error) {
 		ERR_PRINT("Channel Error: " + String(std::string(error).c_str()));
 	});
-}
-
-void WebRTCLibDataChannel::queue_packet(const uint8_t *data, uint32_t size, bool p_is_string) {
-	mutex->lock();
-
-	std::vector<uint8_t> packet;
-	packet.resize(size);
-	memcpy(&packet[0], data, size);
-	packet_queue.push(QueuedPacket(packet, p_is_string));
-
-	mutex->unlock();
 }
 
 void WebRTCLibDataChannel::_set_write_mode(WriteMode p_mode) {
@@ -124,7 +128,7 @@ bool WebRTCLibDataChannel::_was_string_packet() const {
 
 WebRTCDataChannel::ChannelState WebRTCLibDataChannel::_get_ready_state() const {
 	ERR_FAIL_COND_V(!channel, STATE_CLOSED);
-	return channel_state;
+	return shared_state->channel_state.load(std::memory_order_acquire);
 }
 
 String WebRTCLibDataChannel::_get_label() const {
@@ -179,18 +183,17 @@ void WebRTCLibDataChannel::_close() try {
 }
 
 Error WebRTCLibDataChannel::_get_packet(const uint8_t **r_buffer, int32_t *r_len) {
-	ERR_FAIL_COND_V(packet_queue.empty(), ERR_UNAVAILABLE);
+	std::unique_lock lock(shared_state->mutex);
 
-	mutex->lock();
-
+	ERR_FAIL_COND_V(shared_state->packet_queue.empty(), ERR_UNAVAILABLE);
+	// Update the packet count
+	shared_state->available_packets.store(shared_state->packet_queue.size() - 1, std::memory_order_release);
 	// Update current packet and pop queue
-	current_packet = packet_queue.front();
-	packet_queue.pop();
+	current_packet = shared_state->packet_queue.front();
+	shared_state->packet_queue.pop();
 	// Set out buffer and size (buffer will be gone at next get_packet or close)
 	*r_buffer = &current_packet.first[0];
 	*r_len = current_packet.first.size();
-
-	mutex->unlock();
 
 	return OK;
 }
@@ -214,7 +217,7 @@ Error WebRTCLibDataChannel::_put_packet(const uint8_t *p_buffer, int32_t p_len) 
 }
 
 int32_t WebRTCLibDataChannel::_get_available_packet_count() const {
-	return packet_queue.size();
+	return shared_state->available_packets.load(std::memory_order_acquire);
 }
 
 int32_t WebRTCLibDataChannel::_get_max_packet_size() const {
@@ -222,11 +225,8 @@ int32_t WebRTCLibDataChannel::_get_max_packet_size() const {
 }
 
 WebRTCLibDataChannel::WebRTCLibDataChannel() {
-	mutex = new std::mutex;
 }
 
 WebRTCLibDataChannel::~WebRTCLibDataChannel() {
 	_close();
-	channel = nullptr;
-	delete mutex;
 }
