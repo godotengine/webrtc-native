@@ -32,107 +32,39 @@ jobs:
           extra-args: "-a"
 
   build:
-    runs-on: ${{ matrix.os }}
     name: 🔧 Build
     needs: static-checks
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Android
-          - platform: android
-            arch: 'x86_64'
-            gdnative_flags: 'android_arch=x86_64'
-            sconsflags: ''
-            os: 'ubuntu-22.04'
-            cache-name: android-x86_64
-          - platform: android
-            arch: 'arm64'
-            gdnative_flags: 'android_arch=arm64v8'
-            sconsflags: ''
-            os: 'ubuntu-22.04'
-            cache-name: android-arm64
-
-          # iOS
-          - platform: ios
-            arch: 'x86_64'
-            gdnative_flags: 'ios_arch=x86_64'
-            sconsflags: 'ios_simulator=true'
-            os: 'macos-latest'
-            cache-name: ios-x86_64-simulator
-          - platform: ios
-            arch: 'arm64'
-            gdnative_flags: 'ios_arch=arm64'
-            sconsflags: ''
-            os: 'macos-latest'
-            cache-name: ios-arm64
-
-          # Linux
-          - platform: linux
-            arch: 'x86_32'
-            buildroot: 'i686-godot-linux-gnu_sdk-buildroot'
-            gdnative_flags: 'bits=32'
-            sconsflags: ''
-            os: 'ubuntu-22.04'
-            cache-name: linux-x86_32
-          - platform: linux
-            arch: 'x86_64'
-            buildroot: 'x86_64-godot-linux-gnu_sdk-buildroot'
-            gdnative_flags: 'bits=64'
-            sconsflags: ''
-            os: 'ubuntu-22.04'
-            cache-name: linux-x86_64
-          - platform: linux
-            arch: 'arm32'
-            buildroot: 'arm-godot-linux-gnueabihf_sdk-buildroot'
-            gdnative_flags: 'bits=32'
-            sconsflags: ''
-            os: 'ubuntu-22.04'
-            cache-name: linux-arm32
-          - platform: linux
-            arch: 'arm64'
-            buildroot: 'aarch64-godot-linux-gnu_sdk-buildroot'
-            gdnative_flags: 'bits=64'
-            sconsflags: ''
-            os: 'ubuntu-22.04'
-            cache-name: linux-arm64
-
-          # macOS
-          - platform: macos
-            arch: 'universal'
-            gdnative_flags: 'macos_arch=universal bits=64'
-            sconsflags: ''
-            os: 'macos-latest'
-            cache-name: macos-universal
-
-          # Windows
-          - platform: windows
-            arch: 'x86_32'
-            gdnative_flags: 'bits=32'
-            sconsflags: 'use_mingw=yes'
-            os: 'ubuntu-22.04'
-            cache-name: win-x86_32
-          - platform: windows
-            arch: 'x86_64'
-            gdnative_flags: 'bits=64'
-            sconsflags: 'use_mingw=yes'
-            os: 'ubuntu-22.04'
-            cache-name: win-x86_64
-          - platform: windows
-            arch: 'arm64'
-            sconsflags: 'use_mingw=yes use_llvm=yes'
-            os: 'ubuntu-22.04'
-            cache-name: win-arm64
-            skip_gdnative: true
-
+        include: [
+            # Android
+            { platform: android, arch: x86_64, gdnative: android_arch=x86_64 },
+            { platform: android, arch: arm64, gdnative: android_arch=arm64v8 },
+            # iOS
+            { platform: ios, arch: arm64, gdnative: ios_arch=arm64, os: macos-latest },
+            { platform: ios, arch: arm64, flags: ios_simulator=yes, gdnative: ios_arch=arm64, suffix: -simulator, os: macos-latest },
+            { platform: ios, arch: x86_64, flags: ios_simulator=yes, gdnative: ios_arch=x86_64, suffix: -simulator, os: macos-latest },
+            # Linux
+            { platform: linux, arch: x86_32, gdnative: bits=32, buildroot: i686-godot-linux-gnu_sdk-buildroot },
+            { platform: linux, arch: x86_64, gdnative: bits=64, buildroot: x86_64-godot-linux-gnu_sdk-buildroot },
+            { platform: linux, arch: arm32, gdnative: bits=32, buildroot: arm-godot-linux-gnueabihf_sdk-buildroot },
+            { platform: linux, arch: arm64, gdnative: bits=64, buildroot: aarch64-godot-linux-gnu_sdk-buildroot },
+            # macOS
+            { platform: macos, arch: universal, gdnative: 'macos_arch=universal bits=64', os: macos-latest },
+            # Windows
+            { platform: windows, arch: x86_64, gdnative: bits=64 },
+            { platform: windows, arch: x86_32, gdnative: bits=32 },
+            { platform: windows, arch: arm64, flags: use_llvm=yes},
+          ]
+    runs-on: ${{ matrix.os || 'ubuntu-22.04' }}
     env:
+      CACHE_NAME: ${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix || '' }}
       SCONS_CACHE: ${{ github.workspace }}/.scons-cache/
-      SCONSFLAGS: ${{ matrix.sconsflags }} platform=${{ matrix.platform }} arch=${{ matrix.arch }} build_profile=build_profile.json --jobs=2
-
+      SCONSFLAGS: ${{ matrix.flags || '' }} platform=${{ matrix.platform }} arch=${{ matrix.arch }} build_profile=build_profile.json --jobs=2
     defaults:
       run:
         shell: bash
-
     steps:
       - uses: actions/checkout@v6
         with:
@@ -141,7 +73,7 @@ jobs:
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
         with:
-          cache-name: ${{ matrix.cache-name }}
+          cache-name: ${{ env.CACHE_NAME }}
           scons-cache: ${{ env.SCONS_CACHE }}
         continue-on-error: true
 
@@ -240,20 +172,20 @@ jobs:
           scons target=template_release godot_version=4
 
       - name: Compile GDNative (3.5+) - release ${{ matrix.platform }} - ${{ matrix.arch }}
-        if: ${{ ! ( matrix.skip_gdnative || false ) }}
+        if: ${{ matrix.gdnative || false }}
         run: |
-          scons target=release generate_bindings=yes ${{ matrix.gdnative_flags }} godot_version=3
+          scons target=release generate_bindings=yes ${{ matrix.gdnative }} godot_version=3
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
         with:
-          cache-name: ${{ matrix.cache-name }}
+          cache-name: ${{ env.CACHE_NAME }}
           scons-cache: ${{ env.SCONS_CACHE }}
         continue-on-error: true
 
       - uses: actions/upload-artifact@v7
         with:
-          name: ${{ github.job }}-${{ matrix.platform }}-${{ matrix.arch }}
+          name: ${{ github.job }}-${{ matrix.platform }}-${{ matrix.arch }}${{ matrix.suffix || '' }}
           path: |
             bin/
             !bin/thirdparty/
